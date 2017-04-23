@@ -75,3 +75,6 @@ a  ⊕ b  = ff
 ∨-comm {tt} {ff} p = refl
 ∨-comm {ff} {tt} p = refl
 ∨-comm {ff} {ff} ()
+
+𝔹-contra : ff ≡ tt → ∀ {P : Set} → P
+𝔹-contra ()

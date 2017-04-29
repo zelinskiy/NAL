@@ -26,12 +26,6 @@ length : ∀ {ℓ} {A : Set ℓ} → 𝕃 A → ℕ
 length [] = ℤ
 length (x :: xs) = 𝕊 (length xs)
 
-list0 : 𝕃 Set
-list0 = ℕ :: 𝔹 :: 𝕃 (𝕃 𝔹) :: []
-
-listℕ : 𝕃 ℕ
-listℕ = 1 :: 2 :: 3 :: 4 :: 5 :: 6 :: 7 :: 8 :: 9 :: []
-
 length-homo : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → (ys : 𝕃 A) →
                        length (xs ++ ys) ≡ length xs + length ys
 length-homo [] ys = refl
@@ -47,11 +41,8 @@ filter f (x :: xs) with f x
 ... | tt = x :: filter f xs
 ... | ff = filter f xs
 
-id : ∀ {ℓ} {A : Set ℓ} → (A → A)
-id = λ x → x
-
 map-preserve-length : ∀ {ℓ} {A B : Set ℓ} → (f : A → B) → (xs : 𝕃 A) →
-                                                              length(map f xs) ≡ length xs
+                                         length(map f xs) ≡ length xs
 map-preserve-length f [] = refl
 map-preserve-length f (x :: xs) rewrite map-preserve-length f xs = refl
 
@@ -59,7 +50,7 @@ _∘_ : {A : Set}{B : A → Set}{C : {x : A} → B x → Set}
     → (f : {x : A} → (y : B x) → C y) → (g : (x : A) → B x) → ((x : A) → C (g x))
 f ∘ g = λ x → f (g x)
 
-map-id : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → map id xs ≡ xs
+map-id : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → map (λ x → x) xs ≡ xs
 map-id [] = refl
 map-id (x :: xs) rewrite map-id xs = refl
 
@@ -130,5 +121,16 @@ filter-less p (x :: xs) with p x
 filter-idemp : ∀ {ℓ} {A : Set ℓ} (p : A → 𝔹) (xs : 𝕃 A) → (filter p (filter p xs)) ≡ (filter p xs)
 filter-idemp p [] = refl
 filter-idemp p (x :: xs) with inspect (p x)
-filter-idemp p (x :: xs) | tt with≡ p' = {!!}
-filter-idemp p (x :: xs) | ff with≡ p' = {!!}
+filter-idemp p (x :: xs) | tt with≡ p' rewrite p' | p' | p' | filter-idemp p xs = refl
+filter-idemp p (x :: xs) | ff with≡ p' rewrite p' | p' | filter-idemp p xs = refl
+
+infixr 40 _∈ₙ_
+
+_∈ₙ_ : ℕ → 𝕃 ℕ → 𝔹
+x ∈ₙ [] = ff
+x ∈ₙ (y :: ys) = if (x == y) then tt else (x ∈ₙ ys)
+
+_⊆ₙ_ : 𝕃 ℕ → 𝕃 ℕ → 𝔹
+[] ⊆ₙ ys = tt
+(x :: xs) ⊆ₙ ys = if (x ∈ₙ ys) then xs ⊆ₙ ys else ff
+

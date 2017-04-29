@@ -1,7 +1,6 @@
 module MyBool where
 
-open import Agda.Builtin.Equality
-
+open import Utils
 
 data 𝔹 : Set where
   tt : 𝔹

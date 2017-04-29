@@ -1,6 +1,7 @@
 module MyNats where
 
-open import Agda.Builtin.Equality
+
+open import Utils
 open import MyBool
 
 data ℕ : Set where
@@ -110,6 +111,10 @@ _<_ : ℕ → ℕ → 𝔹
 <-trans {𝕊 x} {𝕊 y} {ℤ} p ()
 <-trans {𝕊 x} {𝕊 y} {𝕊 z} p q = <-trans {x} {y} {z} p q
 
+<-suc : ∀ (n : ℕ) → n < 𝕊 n ≡ tt
+<-suc 0 = refl
+<-suc (𝕊 n) rewrite <-suc n = refl
+
 _≤_ : ℕ → ℕ → 𝔹
 ℤ ≤ ℤ = tt
 ℤ ≤ 𝕊 y = tt
@@ -135,7 +140,9 @@ _≤_ : ℕ → ℕ → 𝔹
 ≤-refl ℤ = refl
 ≤-refl (𝕊 x) rewrite ≤-refl x = refl
 
-
+≤-suc : ∀ (n : ℕ) → n ≤ 𝕊 n ≡ tt
+≤-suc ℤ = refl
+≤-suc (𝕊 n) rewrite ≤-suc n = refl
 
 
 _==_ : ℕ → ℕ → 𝔹
@@ -182,3 +189,4 @@ f (𝕊 x) = (𝕊 x) * (f x)
 ≤-antisymm ℤ (𝕊 y)  p ()
 ≤-antisymm (𝕊 x) ℤ ()
 ≤-antisymm (𝕊 x) (𝕊 y) p q rewrite ≤-antisymm x y p q = refl
+

@@ -1,6 +1,6 @@
 module MyList where
 
-open import Agda.Builtin.Equality
+open import Utils
 
 open import MyNats
 open import MyBool
@@ -41,6 +41,12 @@ map : ∀ {ℓ} {A B : Set ℓ} → (A → B) → 𝕃 A → 𝕃 B
 map f [] = []
 map f (x :: xs) = (f x) :: map f xs
 
+filter : ∀ {ℓ} {A : Set ℓ} → (f : A → 𝔹) → 𝕃 A → 𝕃 A
+filter p [] = []
+filter f (x :: xs) with f x
+... | tt = x :: filter f xs
+... | ff = filter f xs
+
 id : ∀ {ℓ} {A : Set ℓ} → (A → A)
 id = λ x → x
 
@@ -79,7 +85,6 @@ reverse-contravariant : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → (ys : 𝕃
                                  reverse (xs ++ ys) ≡ reverse ys ++ reverse xs
 reverse-contravariant [] [] = refl
 reverse-contravariant [] (y :: ys) rewrite
-                      reverse-contravariant [] ys |
                       ++[] (reverse ys) |
                       ++[] (reverse ys ++ y :: [])
                       = refl
@@ -109,3 +114,21 @@ reverse-preserves-length (x :: xs) rewrite
                          reverse-preserves-length xs |
                          +comm (length xs) 1
                          = refl
+
+
+--≤-suc : ∀ (n : ℕ) → n ≤ suc n ≡ tt
+--≤-trans : ∀ {x y z : ℕ} → x ≤ y ≡ tt → y ≤ z ≡ tt → x ≤ z ≡ tt
+
+filter-less : ∀ {ℓ} {A : Set ℓ} → (p : A → 𝔹) → (xs : 𝕃 A) →
+            length (filter p xs) ≤ length xs ≡ tt
+filter-less p [] = refl
+filter-less p (x :: xs) with p x
+... | tt = filter-less p xs
+... | ff = ≤-trans {length (filter p xs)} (filter-less p xs) (≤-suc (length xs))
+
+
+filter-idemp : ∀ {ℓ} {A : Set ℓ} (p : A → 𝔹) (xs : 𝕃 A) → (filter p (filter p xs)) ≡ (filter p xs)
+filter-idemp p [] = refl
+filter-idemp p (x :: xs) with inspect (p x)
+filter-idemp p (x :: xs) | tt with≡ p' = {!!}
+filter-idemp p (x :: xs) | ff with≡ p' = {!!}

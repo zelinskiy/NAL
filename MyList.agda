@@ -55,7 +55,7 @@ map-id [] = refl
 map-id (x :: xs) rewrite map-id xs = refl
 
 map-∘ : ∀ {A B C : Set} → (f : B → C) →  (g : A → B) → (xs : 𝕃 A) →
-                                            map (f ∘ g) xs ≡ ((map f) ∘ (map g)) xs
+  map (f ∘ g) xs ≡ ((map f) ∘ (map g)) xs
 map-∘ f g [] = refl
 map-∘ f g (x :: xs) rewrite map-∘ f g xs = refl
 
@@ -118,11 +118,26 @@ filter-less p (x :: xs) with p x
 ... | ff = ≤-trans {length (filter p xs)} (filter-less p xs) (≤-suc (length xs))
 
 
-filter-idemp : ∀ {ℓ} {A : Set ℓ} (p : A → 𝔹) (xs : 𝕃 A) → (filter p (filter p xs)) ≡ (filter p xs)
+
+filter-step-lemma : ∀ {ℓ} {A : Set ℓ} →
+  (x : A) (xs : 𝕃 A) (p : A → 𝔹) (q : p x ≡ tt) →
+  filter p (x :: xs) ≡ x :: (filter p xs)
+filter-step-lemma x xs p q rewrite q = refl
+
+filter-idemp : ∀ {ℓ} {A : Set ℓ} (p : A → 𝔹) (xs : 𝕃 A) →
+  (filter p (filter p xs)) ≡ (filter p xs)
 filter-idemp p [] = refl
 filter-idemp p (x :: xs) with inspect (p x)
-filter-idemp p (x :: xs) | tt with≡ p' rewrite p' | p' | p' | filter-idemp p xs = refl
-filter-idemp p (x :: xs) | ff with≡ p' rewrite p' | p' | filter-idemp p xs = refl
+filter-idemp p (x :: xs) | tt with≡ p' rewrite
+  filter-step-lemma x xs p p' |
+  filter-step-lemma x (filter p xs) p p' |
+  filter-idemp p xs
+  = refl  
+filter-idemp p (x :: xs) | ff with≡ p' rewrite
+  p' |
+  p' |
+  filter-idemp p xs
+  = refl
 
 infixr 40 _∈ₙ_
 

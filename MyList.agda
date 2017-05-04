@@ -3,7 +3,7 @@ module MyList where
 open import Utils
 
 open import MyNats
-open import MyBool
+open import MyBool hiding (_⊕_)
 
 data 𝕃 {ℓ} (A : Set ℓ) : Set ℓ where
   [] : 𝕃 A
@@ -148,4 +148,6 @@ x ∈ₙ (y :: ys) = if (x == y) then tt else (x ∈ₙ ys)
 _⊆ₙ_ : 𝕃 ℕ → 𝕃 ℕ → 𝔹
 [] ⊆ₙ ys = tt
 (x :: xs) ⊆ₙ ys = if (x ∈ₙ ys) then xs ⊆ₙ ys else ff
+
+
 

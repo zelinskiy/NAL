@@ -23,8 +23,8 @@ infixl 30 _++_
 ++-assoc (x :: xs) ys zs rewrite ++-assoc xs ys zs = refl
 
 length : ∀ {ℓ} {A : Set ℓ} → 𝕃 A → ℕ
-length [] = ℤ
-length (x :: xs) = 𝕊 (length xs)
+length [] = zero
+length (x :: xs) = suc (length xs)
 
 length-homo : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → (ys : 𝕃 A) →
                        length (xs ++ ys) ≡ length xs + length ys

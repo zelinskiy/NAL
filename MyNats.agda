@@ -5,8 +5,8 @@ open import Utils
 open import MyBool
 
 data ℕ : Set where
-  ℤ : ℕ
-  𝕊 : ℕ → ℕ
+  zero : ℕ
+  suc : ℕ → ℕ
 
 {-# BUILTIN NATURAL  ℕ  #-}
 
@@ -17,8 +17,8 @@ data ℕ : Set where
 
 
 _+_ : ℕ → ℕ → ℕ
-ℤ + n = n
-𝕊 m + n = 𝕊 (m + n)
+zero + n = n
+suc m + n = suc (m + n)
 
 infixl 25 _+_
 
@@ -30,20 +30,20 @@ infixl 25 _+_
 0+ x = refl
 
 +0 : ∀ (x : ℕ) → x + 0 ≡ x
-+0 ℤ = refl
-+0 (𝕊 x) rewrite +0 x = refl
++0 zero = refl
++0 (suc x) rewrite +0 x = refl
 
 +assoc : ∀ (x y z : ℕ) → x + (y + z) ≡ (x + y) + z
-+assoc ℤ y z = refl
-+assoc (𝕊 x) y z rewrite +assoc x y z = refl
++assoc zero y z = refl
++assoc (suc x) y z rewrite +assoc x y z = refl
 
-+suc-lemma : ∀ (x y : ℕ) → x + (𝕊 y) ≡ 𝕊 (x + y)
-+suc-lemma ℤ y = refl
-+suc-lemma (𝕊 x) y rewrite +suc-lemma x y = refl
++suc-lemma : ∀ (x y : ℕ) → x + (suc y) ≡ suc (x + y)
++suc-lemma zero y = refl
++suc-lemma (suc x) y rewrite +suc-lemma x y = refl
 
 +comm : ∀ (x y : ℕ) → x + y ≡ y + x
-+comm ℤ y rewrite +0 y = refl
-+comm (𝕊 x) y  rewrite +comm x y | +suc-lemma y x = refl
++comm zero y rewrite +0 y = refl
++comm (suc x) y  rewrite +comm x y | +suc-lemma y x = refl
 
 
 
@@ -53,39 +53,39 @@ infixl 25 _+_
 
 
 _*_ : ℕ → ℕ → ℕ
-ℤ * n = ℤ
-𝕊 a * b = b + (a * b)
+zero * n = zero
+suc a * b = b + (a * b)
 
 infixl 30 _*_ 
 
 *rdistr+ : ∀ (x y z : ℕ) → (x + y) * z ≡ x * z + y * z
-*rdistr+ ℤ y z = refl
-*rdistr+ (𝕊 x) y z rewrite *rdistr+ x y z = +assoc z (x * z) (y * z)
+*rdistr+ zero y z = refl
+*rdistr+ (suc x) y z rewrite *rdistr+ x y z = +assoc z (x * z) (y * z)
 
-*0 : ∀ (x : ℕ) → x * ℤ ≡ ℤ
-*0 ℤ = refl
-*0 (𝕊 x) rewrite *0 x = refl
+*0 : ∀ (x : ℕ) → x * zero ≡ zero
+*0 zero = refl
+*0 (suc x) rewrite *0 x = refl
 
-*1 : ∀ (x : ℕ) → x * 𝕊 ℤ ≡ x
-*1 ℤ = refl
-*1 (𝕊 x) rewrite *1 x = refl
+*1 : ∀ (x : ℕ) → x * suc zero ≡ x
+*1 zero = refl
+*1 (suc x) rewrite *1 x = refl
 
 
-*suc-lemma : ∀ (x y : ℕ) → x * (𝕊 y) ≡ x + x * y
-*suc-lemma ℤ y = refl
-*suc-lemma (𝕊 x) y rewrite *suc-lemma x y | +assoc y x (x * y) | +assoc x y (x * y) | +comm y x  = refl
+*suc-lemma : ∀ (x y : ℕ) → x * (suc y) ≡ x + x * y
+*suc-lemma zero y = refl
+*suc-lemma (suc x) y rewrite *suc-lemma x y | +assoc y x (x * y) | +assoc x y (x * y) | +comm y x  = refl
 
 *comm : ∀ (x y : ℕ) → x * y ≡ y * x
-*comm ℤ y rewrite *0 y = refl
-*comm (𝕊 x) y rewrite  *suc-lemma y x | *comm x y = refl
+*comm zero y rewrite *0 y = refl
+*comm (suc x) y rewrite  *suc-lemma y x | *comm x y = refl
 
 *assoc : ∀ (x y z : ℕ) → (x * y) * z ≡ x * (y * z)
-*assoc ℤ y z  = refl
-*assoc (𝕊 x) y z rewrite *assoc x y z | *rdistr+ y (x * y) z | *assoc x y z = refl
+*assoc zero y z  = refl
+*assoc (suc x) y z rewrite *assoc x y z | *rdistr+ y (x * y) z | *assoc x y z = refl
 
 *ldistr+ : ∀ (x y z : ℕ) → x * (y + z) ≡ x * y + x * z
-*ldistr+ x ℤ z rewrite *comm x (ℤ + z) | *0 x   = refl
-*ldistr+ x (𝕊 y) z rewrite *suc-lemma x (y + z) | *suc-lemma x y | *ldistr+ x y z | +assoc x (x * y) (x * z)= refl
+*ldistr+ x zero z rewrite *comm x (zero + z) | *0 x   = refl
+*ldistr+ x (suc y) z rewrite *suc-lemma x (y + z) | *suc-lemma x y | *ldistr+ x y z | +assoc x (x * y) (x * z)= refl
 
 
 
@@ -93,100 +93,104 @@ infixl 30 _*_
 
 
 _<_ : ℕ → ℕ → 𝔹
-ℤ < ℤ = ff
-ℤ < 𝕊 y = tt
-𝕊 x < ℤ = ff
-𝕊 x < 𝕊 y = x < y
+zero < zero = ff
+zero < suc y = tt
+suc x < zero = ff
+suc x < suc y = x < y
 
 
 <-0 : ∀ (x : ℕ) → x < 0 ≡ ff
-<-0 ℤ = refl
-<-0 (𝕊 x) rewrite <-0 x = refl
+<-0 zero = refl
+<-0 (suc x) rewrite <-0 x = refl
 
 
 <-trans : ∀ {x y z : ℕ} → x < y ≡ tt → y < z ≡ tt → x < z ≡ tt
-<-trans {x} {ℤ} p q rewrite <-0 x = 𝔹-contra p
-<-trans {ℤ} {𝕊 y} {ℤ} p ()
-<-trans {ℤ} {𝕊 y} {𝕊 z} p q = refl
-<-trans {𝕊 x} {𝕊 y} {ℤ} p ()
-<-trans {𝕊 x} {𝕊 y} {𝕊 z} p q = <-trans {x} {y} {z} p q
+<-trans {x} {zero} p q rewrite <-0 x = 𝔹-contra p
+<-trans {zero} {suc y} {zero} p ()
+<-trans {zero} {suc y} {suc z} p q = refl
+<-trans {suc x} {suc y} {zero} p ()
+<-trans {suc x} {suc y} {suc z} p q = <-trans {x} {y} {z} p q
 
-<-suc : ∀ (n : ℕ) → n < 𝕊 n ≡ tt
+<-suc : ∀ (n : ℕ) → n < suc n ≡ tt
 <-suc 0 = refl
-<-suc (𝕊 n) rewrite <-suc n = refl
+<-suc (suc n) rewrite <-suc n = refl
 
 _≤_ : ℕ → ℕ → 𝔹
-ℤ ≤ ℤ = tt
-ℤ ≤ 𝕊 y = tt
-𝕊 x ≤ ℤ = ff
-𝕊 x ≤ 𝕊 y = x ≤ y
+zero ≤ zero = tt
+zero ≤ suc y = tt
+suc x ≤ zero = ff
+suc x ≤ suc y = x ≤ y
 
-≤-0 : ∀ {x : ℕ} → (x ≤ ℤ) ≡ tt → x ≡ ℤ
-≤-0 {ℤ} p = refl
-≤-0 {𝕊 x} ()
+≤-0 : ∀ {x : ℕ} → (x ≤ zero) ≡ tt → x ≡ zero
+≤-0 {zero} p = refl
+≤-0 {suc x} ()
 
 ≤-trans : ∀ {x y z : ℕ} → x ≤ y ≡ tt → y ≤ z ≡ tt → x ≤ z ≡ tt
-≤-trans {ℤ} {ℤ} {ℤ} p q = refl
-≤-trans {ℤ} {ℤ} {𝕊 z} p q = refl
-≤-trans {ℤ} {𝕊 y} {ℤ} p q = refl
-≤-trans {ℤ} {𝕊 y} {𝕊 z} p q = refl
-≤-trans {𝕊 x} {ℤ} {ℤ} ()
-≤-trans {x} {ℤ} {𝕊 z} p q  rewrite ≤-0 {x} p = refl
-≤-trans {𝕊 x} {𝕊 y} {ℤ} p ()
-≤-trans {𝕊 x} {𝕊 y} {𝕊 z} p q = ≤-trans {x} {y} {z} p q
+≤-trans {zero} {zero} {zero} p q = refl
+≤-trans {zero} {zero} {suc z} p q = refl
+≤-trans {zero} {suc y} {zero} p q = refl
+≤-trans {zero} {suc y} {suc z} p q = refl
+≤-trans {suc x} {zero} {zero} ()
+≤-trans {x} {zero} {suc z} p q  rewrite ≤-0 {x} p = refl
+≤-trans {suc x} {suc y} {zero} p ()
+≤-trans {suc x} {suc y} {suc z} p q = ≤-trans {x} {y} {z} p q
 
 
 ≤-refl : ∀ (x : ℕ) → x ≤ x ≡ tt
-≤-refl ℤ = refl
-≤-refl (𝕊 x) rewrite ≤-refl x = refl
+≤-refl zero = refl
+≤-refl (suc x) rewrite ≤-refl x = refl
 
-≤-suc : ∀ (n : ℕ) → n ≤ 𝕊 n ≡ tt
-≤-suc ℤ = refl
-≤-suc (𝕊 n) rewrite ≤-suc n = refl
+≤-suc : ∀ (n : ℕ) → n ≤ suc n ≡ tt
+≤-suc zero = refl
+≤-suc (suc n) rewrite ≤-suc n = refl
 
 
 _==_ : ℕ → ℕ → 𝔹
-ℤ == ℤ = tt
-𝕊 x == 𝕊 y = x == y
+zero == zero = tt
+suc x == suc y = x == y
 _==_ _ _ = ff
 
 ==trans : ∀ (x y z : ℕ) → (x == y) ≡ tt → (y == z) ≡ tt → (x == z) ≡ tt
-==trans ℤ ℤ ℤ p q = refl
-==trans (𝕊 _) ℤ _ ()
-==trans (𝕊 _) (𝕊 _) ℤ p ()
-==trans ℤ (𝕊 _) _ ()
-==trans ℤ ℤ (𝕊 _) p ()
-==trans (𝕊 x) (𝕊 y) (𝕊 z) p q rewrite ==trans x y z p q = refl
+==trans zero zero zero p q = refl
+==trans (suc _) zero _ ()
+==trans (suc _) (suc _) zero p ()
+==trans zero (suc _) _ ()
+==trans zero zero (suc _) p ()
+==trans (suc x) (suc y) (suc z) p q rewrite ==trans x y z p q = refl
 
 ==comm : ∀ (x y : ℕ) → x == y ≡ y == x
-==comm ℤ ℤ = refl
-==comm ℤ (𝕊 y) = refl
-==comm (𝕊 x) ℤ = refl
-==comm (𝕊 x) (𝕊 y) rewrite ==comm x y = refl
+==comm zero zero = refl
+==comm zero (suc y) = refl
+==comm (suc x) zero = refl
+==comm (suc x) (suc y) rewrite ==comm x y = refl
 
 ==refl : ∀ (x : ℕ) → x == x ≡ tt
-==refl ℤ = refl
-==refl (𝕊 x) rewrite ==refl x = refl
+==refl zero = refl
+==refl (suc x) rewrite ==refl x = refl
 
 
 ==-to-≡ : ∀ {x y : ℕ} → x == y ≡ tt → x ≡ y
-==-to-≡ {ℤ} {ℤ} p = refl
-==-to-≡ {ℤ} {𝕊 y} ()
-==-to-≡ {𝕊 x} {ℤ} () 
-==-to-≡ {𝕊 x} {𝕊 y} p rewrite ==-to-≡ {x} {y} p = refl
+==-to-≡ {zero} {zero} p = refl
+==-to-≡ {zero} {suc y} ()
+==-to-≡ {suc x} {zero} () 
+==-to-≡ {suc x} {suc y} p rewrite ==-to-≡ {x} {y} p = refl
 
 
 ≡-to-== : ∀ {x y : ℕ} → x ≡ y → x == y ≡ tt
 ≡-to-== {x} refl = ==refl x
 
 f : (n : ℕ) → ℕ
-f ℤ = 𝕊 ℤ
-f (𝕊 x) = (𝕊 x) * (f x)
+f zero = suc zero
+f (suc x) = (suc x) * (f x)
 
 
 ≤-antisymm : ∀ (x y : ℕ) → x ≤ y ≡ tt → y ≤ x ≡ tt → y == x ≡ tt
-≤-antisymm ℤ ℤ p q = refl
-≤-antisymm ℤ (𝕊 y)  p ()
-≤-antisymm (𝕊 x) ℤ ()
-≤-antisymm (𝕊 x) (𝕊 y) p q rewrite ≤-antisymm x y p q = refl
+≤-antisymm zero zero p q = refl
+≤-antisymm zero (suc y)  p ()
+≤-antisymm (suc x) zero ()
+≤-antisymm (suc x) (suc y) p q rewrite ≤-antisymm x y p q = refl
 
+subtract : (x y : ℕ) (p : y ≤ x ≡ tt) → ℕ
+subtract x zero p = x
+subtract zero (suc y) ()
+subtract (suc x) (suc y) p = subtract x y p

@@ -1,43 +1,54 @@
 module MyAlgebra where
 
-open import Utils using (⊥)
+open import Utils using (⊥; _≡_; refl)
 open import MyList using (𝕃; _::_; []; _∈ₙ_)
 open import MyBool using (𝔹; tt; ff)
-open import MyNats using (ℕ; _+_)
+open import MyNats using (ℕ; _+_) renaming (suc to nsucc; zero to nzero)
+open import MyDependent using (Σ)
 
-record Σ (A : Set) (B : A → Set) : Set where
-  constructor Σ_,_
+open import Agda.Primitive using (Level; _⊔_; lsuc)
+
+
+---------------Magma----------------------
+ 
+record Ω-Magma (M : Set) : Set where
   field
-    Σfst : A
-    Σsnd : B Σfst
+    _⊕_ : M → M → M
 
---mkArr : {A : Set} (a : A) → (a → a)
---mkArr = λ x → x
-
---data magma (A : Set) (B : λ a → (a → a → a)) : Σ A B  where 
+Magma : Set₁
+Magma = Σ Set Ω-Magma
 
 
+---------------Semigroup------------------
+
+---------------Monoid---------------------
+record Ω-Monoid (M : Set) : Set  where
+  field
+    ε : M
+    _⊕_ : M → M → M
+    runit : (x : M) → x ⊕ ε ≡ x
+    lunit : (x : M) → ε ⊕ x ≡ x
+
+Monoid : Set₁
+Monoid = Σ Set Ω-Monoid
+---------------Magma----------------------
+
+---------------Group----------------------
+
+---------------Abelian Group--------------
+
+---------------Ring-----------------------
+
+---------------Lattice--------------------
+
+---------------Heyting Algebra------------
 
 
-allDistinct : 𝕃 ℕ → 𝔹
-allDistinct [] = tt
-allDistinct (x :: xs) with x ∈ₙ xs
-... | tt = ff
-... | ff = allDistinct xs
-
-ℕ-semigroup-Ω : 𝕃 ℕ → Set
-ℕ-semigroup-Ω [] = ⊥
-ℕ-semigroup-Ω  xs with allDistinct xs
-... | ff = ⊥
-... | tt = ℕ → ℕ → ℕ
-
-
-ℕ-semigroup₀ : Σ (𝕃 ℕ) ℕ-semigroup-Ω
-ℕ-semigroup₀ = Σ 1 :: 2 :: 3 :: 4 :: [] , _+_
+---------------Examples------------------
 
 
 
-
-
-
-
+{-
+ℕ-Magma : Magma
+ℕ-Magma = Σ (Fin 10) , record { _⊕_ = fplus }
+-}

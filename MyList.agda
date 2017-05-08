@@ -4,6 +4,7 @@ open import Utils
 
 open import MyNats
 open import MyBool hiding (_⊕_)
+open import MyPair
 
 data 𝕃 {ℓ} (A : Set ℓ) : Set ℓ where
   [] : 𝕃 A
@@ -149,5 +150,12 @@ _⊆ₙ_ : 𝕃 ℕ → 𝕃 ℕ → 𝔹
 [] ⊆ₙ ys = tt
 (x :: xs) ⊆ₙ ys = if (x ∈ₙ ys) then xs ⊆ₙ ys else ff
 
+zipWith : ∀ {ℓ} → ∀ {A B C : Set ℓ } → (f : A → B → C) → (𝕃 A) → (𝕃 B) → 𝕃 C
+zipWith f [] _ = []
+zipWith f _ [] = []
+zipWith f (x :: xs) (y :: ys) = f x y :: zipWith f xs ys
+
+zipLists : ∀ {ℓ} → ∀ {A B : Set ℓ} → (𝕃 A) → (𝕃 B) → 𝕃 ⟪ A , B ⟫
+zipLists = zipWith <_,_>
 
 

@@ -16,3 +16,5 @@ inspect x = x with≡ refl
 
 data ⊥ : Set where
 
+record ⊤ : Set where
+  constructor ⊤-cons

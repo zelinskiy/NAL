@@ -32,7 +32,7 @@ length-homo : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → (ys : 𝕃 A) →
 length-homo [] ys = refl
 length-homo (x :: xs) ys rewrite length-homo xs ys = refl
 
-map : ∀ {ℓ} {A B : Set ℓ} → (A → B) → 𝕃 A → 𝕃 B
+map : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂} → (A → B) → 𝕃 A → 𝕃 B
 map f [] = []
 map f (x :: xs) = (f x) :: map f xs
 
@@ -47,7 +47,7 @@ map-preserve-length : ∀ {ℓ} {A B : Set ℓ} → (f : A → B) → (xs : 𝕃
 map-preserve-length f [] = refl
 map-preserve-length f (x :: xs) rewrite map-preserve-length f xs = refl
 
-_∘_ : {A : Set}{B : A → Set}{C : {x : A} → B x → Set}
+_∘_ : ∀ {ℓ} {A : Set ℓ}{B : A → Set ℓ}{C : {x : A} → B x → Set ℓ}
     → (f : {x : A} → (y : B x) → C y) → (g : (x : A) → B x) → ((x : A) → C (g x))
 f ∘ g = λ x → f (g x)
 
@@ -55,7 +55,7 @@ map-id : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → map (λ x → x) xs ≡ x
 map-id [] = refl
 map-id (x :: xs) rewrite map-id xs = refl
 
-map-∘ : ∀ {A B C : Set} → (f : B → C) →  (g : A → B) → (xs : 𝕃 A) →
+map-∘ : ∀ {ℓ} {A B C : Set ℓ} → (f : B → C) →  (g : A → B) → (xs : 𝕃 A) →
   map (f ∘ g) xs ≡ ((map f) ∘ (map g)) xs
 map-∘ f g [] = refl
 map-∘ f g (x :: xs) rewrite map-∘ f g xs = refl
@@ -165,3 +165,8 @@ foldr f i (x :: xs) = f x (foldr f i xs)
 
 concat : ∀ {ℓ} {A : Set ℓ} → 𝕃 (𝕃 A) → 𝕃 A
 concat = foldr _++_ [] 
+
+singleton : ∀ {ℓ} {A : Set ℓ} → A → 𝕃 A
+singleton x = x :: []
+
+

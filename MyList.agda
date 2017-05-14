@@ -159,3 +159,9 @@ zipLists : ∀ {ℓ} → ∀ {A B : Set ℓ} → (𝕃 A) → (𝕃 B) → 𝕃 
 zipLists = zipWith <_,_>
 
 
+foldr : ∀ {ℓ} {A B : Set ℓ} → (A → B → B) → B → 𝕃 A → B
+foldr f i [] = i
+foldr f i (x :: xs) = f x (foldr f i xs)
+
+concat : ∀ {ℓ} {A : Set ℓ} → 𝕃 (𝕃 A) → 𝕃 A
+concat = foldr _++_ [] 

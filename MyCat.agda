@@ -7,6 +7,13 @@ open import Agda.Primitive
 open import MyPair
 
 
+{-
+TODO:
+Laws
+Instance arguments
+Group universal property objects w their proofs (e.g. Products, Exponentialx, etc.)
+-}
+
 record SmallCategory : Set₁ where
   field
     Objects : Set

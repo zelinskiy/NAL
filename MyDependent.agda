@@ -10,7 +10,15 @@ record Σ {ℓ₁ ℓ₂} (A : Set ℓ₁) (B : A → Set ℓ₂) : Set (ℓ₁ 
 
 open Σ public
 
+Π : (A : Set) (B : A → Set) → Set
+Π A B = (a : A) → B a
+
+ΠΣ : {A : Set} {B : A → Set} → Π A B → (a : A) → Σ A B
+ΠΣ f x = Σ x , f x
+
 data R {A B : Set} (a : A) (b : B) : Set where
+
+
 
 --Axiom of Choice!
 ac : {A B : Set} →

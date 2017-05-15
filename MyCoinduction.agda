@@ -1,5 +1,6 @@
 open import Agda.Builtin.Coinduction using (∞; ♯_; ♭)
 open import MyNats using (ℕ; suc; zero)
+open import MyList using (_∘_)
 open import Utils
 
 {-
@@ -47,21 +48,22 @@ lookup (suc n) (x :: xs) = lookup n (♭ xs)
 --take (suc n) (x :: xs) = x :: take n (♭ xs)
 
 drop : {A : Set} → ℕ → Stream A → Stream A
-drop = {!!}
+drop zero xs = xs
+drop (suc n) (x :: xs) = drop n (♭ xs)
 
 --Corecursive stream functions
 
 repeat : {A : Set} → A → Stream A
-repeat = {!!}
+repeat x = x :: ♯ repeat x
 
 iterate : {A : Set} → (A → A) → A → Stream A
-iterate = {!!}
+iterate f x = x :: ♯ iterate (f ∘ f) x
 
 map : {A B : Set} → (A → B) → Stream A → Stream B
-map = {!!}
+map f (x :: xs) = f x :: ♯ map f (♭ xs)
 
 zipWith : {A B C : Set} → (A → B → C) → Stream A → Stream B → Stream C
-zipWith = {!!}
+zipWith z (x :: xs) (y :: ys) = z x y :: ♯ zipWith z (♭ xs) (♭ ys)
 
 
 -- Relations
@@ -75,7 +77,7 @@ infix 4 _≈_
 
 -- Proofs
 ≈-refl : {A : Set} {xs : Stream A} → xs ≈ xs
-≈-refl = {!!}
+≈-refl {A} {x :: xs} = x :: ♯ ≈-refl
 
 ≈-sym : {A : Set} {xs ys : Stream A} → xs ≈ ys → ys ≈ xs
 ≈-sym = {!!}

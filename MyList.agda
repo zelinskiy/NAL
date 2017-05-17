@@ -72,6 +72,21 @@ reverse (x :: xs) = reverse xs ++ x :: []
 []++ : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → [] ++ xs ≡ xs
 []++ xs = refl
 
+++-homo : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
+  (xs ys : 𝕃 A) (f : A → B) →
+  map f (xs ++ ys) ≡ map f xs ++ map f ys
+++-homo [] [] f = refl
+++-homo [] (y :: ys) f = refl
+++-homo (x :: xs) [] f rewrite
+  ++[] (x :: xs) |
+  ++-homo xs [] f
+  = refl
+++-homo (x :: xs) (y :: ys) f rewrite
+  ++-homo xs ys f |
+  ++-homo xs (y :: ys) f
+  = refl
+
+
 
 reverse-contravariant : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → (ys : 𝕃 A) →
                                  reverse (xs ++ ys) ≡ reverse ys ++ reverse xs
@@ -169,4 +184,12 @@ concat = foldr _++_ []
 singleton : ∀ {ℓ} {A : Set ℓ} → A → 𝕃 A
 singleton x = x :: []
 
+concat-map : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂} →
+  (xss : 𝕃 (𝕃 A)) (f : A → B) →
+  concat (map (map f) xss) ≡ map f (concat xss)
+concat-map [] f = refl
+concat-map (xs :: xss) f rewrite
+  concat-map xss f |
+  sym (++-homo xs (concat xss) f)
+  = refl
 

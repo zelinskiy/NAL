@@ -1,7 +1,7 @@
 module NAL.Data.List where
 
 open import NAL.Utils.Core
-
+LEM⊢Pierce
 open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Data.Pair

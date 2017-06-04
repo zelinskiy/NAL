@@ -7,14 +7,16 @@ open import NAL.Data.Either
 open import NAL.Utils.Relation
 open import NAL.Utils.Core
 
+--Кароче, мне надоело искать норм систему так чт о тут будет что попало
+
 -- TODO:
 -- Cut
 -- Quantors
--- ? is Either provide correct INCLUSIVE or semantics ?
+-- Left Rules
 
 data Formula : Set where
   var : String → Formula
-  True : Formula
+  False : Formula
   _⊃_ : Formula → Formula → Formula
   _&_ : Formula → Formula → Formula
   _∨_ : Formula → Formula → Formula
@@ -23,6 +25,11 @@ data Formula : Set where
 infixr 30 _⊃_
 infixl 60 _&_
 infixl 55 _∨_
+
+infixl 70 ¬_
+¬_ : Formula → Formula
+¬ a = a ⊃ False
+
 
 Context : Set
 Context = 𝕃 Formula
@@ -33,23 +40,25 @@ data _⊢_ : Context → Formula → Set where
   Weaken     : ∀ {Γ f g} → Γ ⊢ f → g :: Γ ⊢ f
   Swap       : ∀ {Γ f g h} → f :: g :: Γ ⊢ h → g :: f :: Γ ⊢ h
   Contract   : ∀ {Γ f h} → f :: Γ ⊢ h → f :: f :: Γ ⊢ h
---Cut        : ∀ {Γ Δ f g} → Γ ⊢ f → f :: Δ ⊢ g → (Γ ++ Δ) ⊢ g
+  Cut        : ∀ {Γ Δ f g} → Γ ⊢ f → f :: Δ ⊢ g → (Γ ++ Δ) ⊢ g
 
   ⊃-IntroR   : ∀ {Γ f g} → f :: Γ ⊢ g → Γ ⊢ f ⊃ g
   ⊃-IntroL   : ∀ {Γ f g h} → Γ ⊢ f → g :: Γ ⊢ h → (f ⊃ g) :: f :: Γ ⊢ h
-  ⊃-Elim     : ∀ {Γ f g} → Γ ⊢ f ⊃ g → Γ ⊢ f → Γ ⊢ g
-  
-  True-Intro : ∀ {Γ} → Γ ⊢ True
+  ⊃-ElimR     : ∀ {Γ f g} → Γ ⊢ f ⊃ g → Γ ⊢ f → Γ ⊢ g
   
   &-IntroR    : ∀ {Γ f g} → Γ ⊢ f → Γ ⊢ g → Γ ⊢ f & g
   &-IntroL    : ∀ {Γ f g h} → f :: g :: Γ ⊢ h → f & g :: Γ ⊢ h
-  &-Elim1    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ f
-  &-Elim2    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ g
+  &-ElimR1    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ f
+  &-ElimR2    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ g
 
---  ∨-IntroL    : ∀ {Γ f g h} → f :: Γ ⊢ h → g :: Γ ⊢ h → f ∨ g :: Γ ⊢ h
+
   ∨-IntroR1   : ∀ {Γ f g} → Γ ⊢ f → Γ ⊢ f ∨ g
   ∨-IntroR2   : ∀ {Γ f g} → Γ ⊢ g → Γ ⊢ f ∨ g
-  ∨-ElimR      : ∀ {Γ f g h} → Γ ⊢ f ⊃ h → Γ ⊢ g ⊃ h → Γ ⊢ f ∨ g → Γ ⊢ h
+  ∨-IntroL    : ∀ {Γ f g h} → f :: Γ ⊢ h → g :: Γ ⊢ h → f ∨ g :: Γ ⊢ h
+  ∨-ElimR    : ∀ {Γ f g h} → Γ ⊢ f ∨ g → Γ ⊢ f ⊃ h → Γ ⊢ g ⊃ h → Γ ⊢ h
+
+  False-Intro : ∀ {Γ f g} → f :: Γ ⊢ g → f :: Γ ⊢ ¬ g → Γ ⊢ ¬ f
+  False-Elim : ∀ {Γ f g} → Γ ⊢ ¬ f → Γ ⊢ f ⊃ g
 
 record KripkeFrame : Set₁ where
   field
@@ -67,7 +76,7 @@ open KripkeFrame
   
 _,_⊨_ : ∀ (k : KripkeFrame) → W k → Formula → Set
 k , w  ⊨ var x = V k w x
-k , w  ⊨ True  = ⊤
+k , w  ⊨ False  = ⊥
 k , w₁ ⊨ f ⊃ g = ∀ {w₂ : W k} → R k w₁ w₂ → k , w₂ ⊨ f → k , w₂ ⊨ g
 k , w  ⊨ f & g = ⟪ (k , w ⊨ f) , (k , w ⊨ g) ⟫
 k , w  ⊨ f ∨ g = Either (k , w ⊨ f) (k , w ⊨ g)
@@ -77,7 +86,7 @@ k , w  ⊨ f ∨ g = Either (k , w ⊨ f) (k , w ⊨ g)
          k , w₁ ⊨ formula →
          k , w₂ ⊨ formula
 ⊨-mono {k} {formula = var x} r p = monotonicV k r p
-⊨-mono {k} {formula = True} r p = ⊤-intro
+⊨-mono {k} {formula = False} r  ()
 ⊨-mono {k} {formula = f ⊃ g} r p r' p' = p (transitiveR k r r') p'
 ⊨-mono {k} {formula = f & g} r < pf , pg > =
   < ⊨-mono {formula = f} r pf , ⊨-mono {formula = g} r pg >
@@ -105,25 +114,24 @@ soundness (Weaken p) g = soundness p (proj₂ g)
 soundness  (Swap p) g =
   soundness p < proj₁ (proj₂ g) , < proj₁ g , proj₂ (proj₂ g) > >
 soundness (Contract p) g = soundness p < proj₁ g , proj₂ (proj₂ g) >
+soundness (Cut p q) g = {!!}
 
+soundness (⊃-IntroL p q) g = {!!}
 soundness (⊃-IntroR p) g r u = soundness p < u , ⊨con-mono r g >
-soundness (⊃-IntroL p q) {k} g =
-  soundness q < proj₁ g (reflexiveR k) (proj₁ (proj₂ g)) , proj₂ (proj₂ g) >
-soundness (⊃-Elim p q) {k} g = (soundness p g) (reflexiveR k) (soundness q g)
+soundness (⊃-ElimR p q) {k} g = (soundness p g) (reflexiveR k) (soundness q g)
 
-soundness True-Intro p = ⊤-intro
+soundness (False-Intro p q) a b c = {!!}
+soundness (False-Elim{Γ}{g}{h} p) {k} {w} co r c = {!!}
 
+soundness (&-IntroL p) g = {!!}
 soundness (&-IntroR pf pg) pfg = < soundness pf pfg , soundness pg pfg >
-soundness (&-IntroL p) pfg =
-  soundness p  < proj₁ (proj₁ pfg) , < proj₂ (proj₁ pfg) , proj₂ pfg > >
-soundness (&-Elim1 pfg) pf = proj₁ (soundness pfg pf)
-soundness (&-Elim2 pfg) pg = proj₂ (soundness pfg pg)
+soundness (&-ElimR1 pfg) pf = proj₁ (soundness pfg pf)
+soundness (&-ElimR2 pfg) pg = proj₂ (soundness pfg pg)
 
---soundness (∨-IntroL p q) < Left g , gc > = soundness p < g , gc >
---soundness (∨-IntroL p q) < Right g , gc > = soundness q < g , gc >
+soundness (∨-IntroL p q) g = {!!}
 soundness (∨-IntroR1 p) {k} {w} g = Left (soundness p g)
 soundness (∨-IntroR2 p) {k} {w} g = Right (soundness p g)
-soundness (∨-ElimR fh gh fg){k} gg with soundness fg gg
+soundness (∨-ElimR fg fh gh){k} gg with soundness fg gg
 ... | Left x = (soundness fh gg) (reflexiveR k) x
 ... | Right x = (soundness gh gg) (reflexiveR k) x
 
@@ -147,13 +155,10 @@ U = record { W = Context ;
              V = λ Γ x → Γ ⊢ var x ;
              monotonicV = λ d p → Weaken≼ d p }
 
-TT : (Γ : Context) → (v : Formula) → Γ ⊢ v ⊃ v
-TT Γ v = ⊃-IntroR (Assume)
 
 CompletenessU : ∀{f : Formula}{Γ : W U} → U , Γ ⊨ f → Γ ⊢ f 
 SoundnessU : ∀{f : Formula}{Γ : W U} → Γ ⊢ f → U , Γ ⊨ f
 CompletenessU {var x} u = u
-CompletenessU {True} u = True-Intro
 CompletenessU {f & g} u =
   &-IntroR (CompletenessU{f} (proj₁ u)) (CompletenessU{g} (proj₂ u))
 CompletenessU {f ⊃ g}{Γ} u = 
@@ -162,13 +167,14 @@ CompletenessU {f ⊃ g}{Γ} u =
       (u (≼-cons ≼-refl) (SoundnessU {f} (Assume {Γ}))))
 CompletenessU {f ∨ g} {Γ} (Left p) = ∨-IntroR1 (CompletenessU p)
 CompletenessU {f ∨ g} {Γ} (Right p) = ∨-IntroR2 (CompletenessU p)
+CompletenessU {False} ()
 SoundnessU {var x} p = p
-SoundnessU {True} p = ⊤-intro
 SoundnessU {f & g} p =
-  < SoundnessU {f} (&-Elim1 p) , SoundnessU {g} (&-Elim2 p) >
+  < SoundnessU {f} (&-ElimR1 p) , SoundnessU {g} (&-ElimR2 p) >
 SoundnessU {f ⊃ g} p r u =
-  SoundnessU (⊃-Elim (Weaken≼ r p) (CompletenessU {f} u))
+  SoundnessU (⊃-ElimR (Weaken≼ r p) (CompletenessU {f} u))
 SoundnessU {f ∨ g} {Γ} p = {!!}
+SoundnessU {False} p = {!!}
 
 
 ctxt-id : ∀{Γ : Context} → U , Γ ⊨con Γ
@@ -205,12 +211,13 @@ module Test0 where
      
   -}
 
+  LEM⊢Pierce : var "A" ∨ ¬ var "A" ⊢ ((var "A" ⊃ var "B") ⊃ var "A") ⊃ var "A"
+  LEM⊢Pierce = ?
+
   T1 : var "Q" :: [] ⊢ var "P" ⊃ var "Q"
-  T1 = ⊃-IntroR (⊃-Elim (⊃-IntroR (Weaken (Weaken Assume))) Assume)
+  T1 = ⊃-IntroR (⊃-ElimR (⊃-IntroR (Weaken (Weaken Assume))) Assume)
   T1N = nbe T1
 
-  T2 : [] ⊢ True ⊃ True
-  T2 = ⊃-IntroR (Weaken True-Intro)
 {-
   T3 : (var "A" ⊃ var "Q") :: (var "A" ⊃ var "Q") :: (var "A" ⊃ var "Q") :: [] ⊢ var "Q"
   T3 = {!!}

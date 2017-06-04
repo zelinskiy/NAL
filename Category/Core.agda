@@ -1,10 +1,9 @@
-module MyCat where
+module NAL.Category.Core where
 
-open import Utils
-open import MyNats
-open import MyList renaming (_∘_ to _○_ )
-open import Agda.Primitive
-open import MyPair
+open import NAL.Utils.Core
+open import NAL.Data.Nats
+open import NAL.Data.List renaming (_∘_ to _○_ )
+open import NAL.Data.Pair
 
 
 {-

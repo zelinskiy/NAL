@@ -1,8 +1,10 @@
 
-open import MyNats hiding (+0)
+module NAL.Examples.EqReasoning-vs-Rewrite where
 
-open import MyEqReasoning
-open import Utils
+open import NAL.Data.Nats hiding (+0)
+
+open import NAL.Utils.EqReasoning
+open import NAL.Utils.Core
 
 
 n+0≡n : (n : ℕ) → n + 0 ≡ n

@@ -1,8 +1,7 @@
-module MyMonad where
-open import Agda.Primitive
-open import MyList
-open import Utils
-open import MyMaybe
+module NAL.Algebra.Monad where
+open import NAL.Data.List
+open import NAL.Utils.Core
+open import NAL.Data.Maybe
 
 record Monad {ℓ₁ ℓ₂} (M : Set ℓ₁ → Set ℓ₂) : Set (lsuc ℓ₁ ⊔ ℓ₂) where
   field

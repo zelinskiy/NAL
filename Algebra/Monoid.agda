@@ -1,8 +1,7 @@
-module MyMonoid where
+module NAL.Algebra.Monoid where
 
-open import Agda.Primitive
-open import Utils
-open import MyList
+open import NAL.Utils.Core
+open import NAL.Data.List
 
 
 record Monoid {ℓ} (M : Set ℓ) : Set ℓ where
@@ -10,6 +9,9 @@ record Monoid {ℓ} (M : Set ℓ) : Set ℓ where
     ε : M
     _·_ : M → M → M
     ·-assoc :  {x y z : M} → (x · y) · z ≡ x · (y · z)
+
+mconcat : ∀ {ℓ} {M : Set ℓ} {{_ : Monoid {ℓ} M}} → 𝕃 M → M
+mconcat = foldr _·_ ε where open Monoid {{...}}
 
 instance
   listMonoid : ∀ {ℓ} {A : Set ℓ} → Monoid (𝕃 A)

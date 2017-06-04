@@ -1,4 +1,4 @@
-module MLTT where
+module NAL.Examples.MLTT where
 
 id : {A : Set} → A → A
 id = λ x → x
@@ -112,3 +112,5 @@ recNat A x f (suc n) = f n (recNat A x f n)
 indNat : (C : ℕ → Set) → C zero → ((x : ℕ) → C x → C (suc x)) → Π ℕ C
 indNat C c₀ c₁ zero = c₀
 indNat C c₀ f (suc n) = f n (indNat C c₀ f n)
+
+

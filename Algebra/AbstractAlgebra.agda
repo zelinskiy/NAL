@@ -1,10 +1,10 @@
-module MyAlgebra where
+module NAL.Algebra.AbstractAlgebra where
 
-open import Utils using (⊥; _≡_; refl)
-open import MyList using (𝕃; _::_; []; _∈ₙ_)
-open import MyBool using (𝔹; tt; ff)
-open import MyNats using (ℕ; _+_; +assoc; +0; 0+) renaming (suc to nsucc; zero to nzero)
-open import MyDependent using (Σ; Σ_,_)
+open import NAL.Utils.Core using (⊥; _≡_; refl)
+open import NAL.Data.List using (𝕃; _::_; []; _∈ₙ_)
+open import NAL.Data.Bool using (𝔹; tt; ff)
+open import NAL.Data.Nats using (ℕ; _+_; +assoc; +0; 0+) renaming (suc to nsucc; zero to nzero)
+open import NAL.Utils.Dependent using (Σ; Σ_,_)
 
 
 

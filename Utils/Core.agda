@@ -1,4 +1,8 @@
-module Utils where
+module NAL.Utils.Core where
+
+import Agda.Primitive
+
+open Agda.Primitive public
 
 infix 4 _≡_ 
 
@@ -14,7 +18,7 @@ sym refl = refl
 trans :  ∀ {ℓ} {A : Set ℓ} → {a b c : A} → a ≡ b → b ≡ c → a ≡ c
 trans refl refl  = refl
 
-cong :  ∀ {ℓ} {A : Set ℓ} → {a b : A} → {B : Set} → {f : A → B} →
+cong :  ∀ {ℓ} {A : Set ℓ} → {a b : A} → {B : Set ℓ} → {f : A → B} →
   a ≡ b → (f a) ≡ (f b)
 cong refl = refl
 
@@ -26,7 +30,8 @@ inspect x = x with≡ refl
 
 data ⊥ : Set where
 
+⊥-elim : ∀ {w} {Whatever : Set w} → ⊥ → Whatever
+⊥-elim ()
+
 record ⊤ : Set where
-  constructor ⊤-cons
-
-
+  constructor ⊤-intro

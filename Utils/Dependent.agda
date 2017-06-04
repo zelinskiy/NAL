@@ -1,6 +1,6 @@
-module MyDependent where
+module NAL.Utils.Dependent where
 
-open import Level using (_⊔_)
+open import NAL.Utils.Core using (_⊔_)
 
 record Σ {ℓ₁ ℓ₂} (A : Set ℓ₁) (B : A → Set ℓ₂) : Set (ℓ₁ ⊔ ℓ₂) where
   constructor Σ_,_

@@ -1,8 +1,10 @@
-module MyNats where
+module NAL.Data.Nats where
 
 
-open import Utils
-open import MyBool
+open import NAL.Utils.Core
+open import NAL.Data.Bool
+open import NAL.Data.Either3
+open import NAL.Utils.Function
 
 data ℕ : Set where
   zero : ℕ
@@ -43,9 +45,11 @@ infixl 25 _+_
 
 +comm : ∀ (x y : ℕ) → x + y ≡ y + x
 +comm zero y rewrite +0 y = refl
-+comm (suc x) y  rewrite +comm x y | +suc-lemma y x = refl
++comm (suc x) y rewrite +comm x y | +suc-lemma y x = refl
 
-
+--suc x + y ≡ y + suc x
+--suc (y + x) ≡ y + suc x
+--suc (y + x) ≡ suc (y + x)
 
 
 
@@ -87,17 +91,28 @@ infixl 30 _*_
 *ldistr+ x zero z rewrite *comm x (zero + z) | *0 x   = refl
 *ldistr+ x (suc y) z rewrite *suc-lemma x (y + z) | *suc-lemma x y | *ldistr+ x y z | +assoc x (x * y) (x * z)= refl
 
+-- x * (zero + z) ≡ x * zero + x * z
+-- z * x ≡ x * 0 + z * x
+-- z * x ≡ 0 + z * x
 
+--*suc-lemma : ∀ (x y : ℕ) → x * (suc y) ≡ x + x * y
+--+assoc : ∀ (x y z : ℕ) → x + (y + z) ≡ (x + y) + z
 
+-- x * (suc y + z) ≡ x * suc y + x * z
+-- x + x * (y + z) ≡ x * suc y + x * z
+-- x + x * (y + z) ≡ x + x * y + x * z
+-- x + (x * y + x * z) ≡ x + x * y + x * z
+-- x + x * y + x * z ≡ x + x * y + x * z
 
-
-
-_<_ : ℕ → ℕ → 𝔹
+_<_ : ℕ → ℕ → 𝔹
 zero < zero = ff
 zero < suc y = tt
 suc x < zero = ff
 suc x < suc y = x < y
 
+
+_>_ : ℕ → ℕ → 𝔹
+_>_ = flip _<_
 
 <-0 : ∀ (x : ℕ) → x < 0 ≡ ff
 <-0 zero = refl
@@ -115,7 +130,10 @@ suc x < suc y = x < y
 <-suc 0 = refl
 <-suc (suc n) rewrite <-suc n = refl
 
-_≤_ : ℕ → ℕ → 𝔹
+<-suc2 : ∀ (x y : ℕ) → suc x < suc y ≡ tt →  x < y ≡ tt
+<-suc2 x y p = p
+
+_≤_ : ℕ → ℕ → 𝔹
 zero ≤ zero = tt
 zero ≤ suc y = tt
 suc x ≤ zero = ff
@@ -184,13 +202,36 @@ f zero = suc zero
 f (suc x) = (suc x) * (f x)
 
 
-≤-antisymm : ∀ (x y : ℕ) → x ≤ y ≡ tt → y ≤ x ≡ tt → y == x ≡ tt
-≤-antisymm zero zero p q = refl
-≤-antisymm zero (suc y)  p ()
-≤-antisymm (suc x) zero ()
-≤-antisymm (suc x) (suc y) p q rewrite ≤-antisymm x y p q = refl
+≤-antisymm : ∀ {x y : ℕ} → x ≤ y ≡ tt → y ≤ x ≡ tt → y ≡ x
+≤-antisymm {0} {0} p q = refl
+≤-antisymm {0} {suc y}  p ()
+≤-antisymm {suc x} {0} ()
+≤-antisymm {suc x} {suc y} p q rewrite ≤-antisymm {x} {y} p q = refl
+
+<-implies-≤ : ∀ {x y : ℕ} → x < y ≡ ff → y ≤ x ≡ tt
+<-implies-≤ {zero} {zero} p = refl
+<-implies-≤ {zero} {suc y} ()
+<-implies-≤ {suc x} {zero} p = refl
+<-implies-≤ {suc x} {suc y} p = <-implies-≤ {x} {y} p
+
+
+<-antisymm : ∀ {x y : ℕ} → x < y ≡ ff → y < x ≡ ff → y ≡ x
+<-antisymm {x} {y} p q = ≤-antisymm {x} {y} (<-implies-≤ {y} {x} q) (<-implies-≤ {x} {y} p)
+
+ℕ-trichotomy : ∀ {x y : ℕ} → Either3 (x < y ≡ tt) (x ≡ y) (y < x ≡ tt)
+ℕ-trichotomy {x} {y} with inspect (x < y) | inspect (y < x)
+... | tt with≡ p | ff with≡ q = Left p
+... | ff with≡ p | tt with≡ q = Right q
+... | tt with≡ p | tt with≡ q = Left p --TODO: This is Absurd!
+... | ff with≡ p | ff with≡ q = Middle (<-antisymm {y} {x} q p)
 
 subtract : (x y : ℕ) (p : y ≤ x ≡ tt) → ℕ
 subtract x zero p = x
 subtract zero (suc y) ()
 subtract (suc x) (suc y) p = subtract x y p
+
+
+_∸_ : (x y : ℕ) → ℕ
+x ∸ 0 = x
+0 ∸ suc y = 0
+suc x ∸ suc y = x ∸ y

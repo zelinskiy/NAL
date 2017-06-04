@@ -1,30 +1,9 @@
-open import Agda.Builtin.Coinduction using (∞; ♯_; ♭)
-open import MyNats using (ℕ; suc; zero)
-open import MyList using (_∘_)
-open import Utils
+module NAL.Coinduction.Stream where
 
-{-
-∞ = \inf
-♭ = \b
-♯ = \sharp
-
-∞  : (A : Set) → Set       -- laziness set constructor
-♯_ : {A : Set} → A → ∞ A   -- compiled as delay
-♭  : {A : Set} → ∞ A → A   -- compiled as force
-
-infix 1000 ♯_
-
-data ∞ (A : Set) : Set where
-  ♯_ : A → ∞ A
-
-♭ : {A : Set} → ∞ A → A
-♭ (♯ x) = x
-
--}
-
-data ℕω : Set where
-  ωzero : ℕω
-  ωsuc : ∞ ℕω → ℕω
+open import NAL.Coinduction.Core
+open import NAL.Data.Nats
+open import NAL.Utils.Function
+open import NAL.Utils.Core
 
 data Stream (A : Set) : Set where
   _::_ : A → ∞ (Stream A) → Stream A
@@ -65,7 +44,6 @@ map f (x :: xs) = f x :: ♯ map f (♭ xs)
 zipWith : {A B C : Set} → (A → B → C) → Stream A → Stream B → Stream C
 zipWith z (x :: xs) (y :: ys) = z x y :: ♯ zipWith z (♭ xs) (♭ ys)
 
-
 -- Relations
 
 data _≈_ {A : Set} : Stream A → Stream A → Set where
@@ -92,15 +70,3 @@ map-cong = {!!}
 elem-≡ : {A : Set} {xs ys : Stream A} → 
          xs ≈ ys → (n : ℕ) → lookup n xs ≡ lookup n ys
 elem-≡ = {!!}
-
-{-
-Rec, a type which is analogous to the Rec type constructor used in
-ΠΣ (see Altenkirch, Danielsson, Löh and Oury. ΠΣ: Dependent Types
-without the Sugar. FLOPS 2010, LNCS 6009.)
-
-data Rec {a} (A : ∞ (Set a)) : Set a where
-  fold : (x : ♭ A) → Rec A
-
-unfold : ∀ {a} {A : ∞ (Set a)} → Rec A → ♭ A
-unfold (fold x) = x
--}

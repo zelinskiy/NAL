@@ -1,5 +1,5 @@
-module MyEqReasoning {a} {A : Set a} where
-open import Utils
+module NAL.Utils.EqReasoning {a} {A : Set a} where
+open import NAL.Utils.Core
 
 infix  3 _∎
 infixr 2 _≡⟨⟩_ _≡⟨_⟩_ 

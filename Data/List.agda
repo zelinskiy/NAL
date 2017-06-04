@@ -1,14 +1,20 @@
-module MyList where
+module NAL.Data.List where
 
-open import Utils
+open import NAL.Utils.Core
 
-open import MyNats
-open import MyBool hiding (_⊕_)
-open import MyPair
+open import NAL.Data.Nats
+open import NAL.Data.Bool
+open import NAL.Data.Pair
+open import NAL.Utils.Function
 
 data 𝕃 {ℓ} (A : Set ℓ) : Set ℓ where
   [] : 𝕃 A
   _::_ : (x : A) (xs : 𝕃 A) → 𝕃 A
+
+
+{-# BUILTIN LIST 𝕃 #-}
+{-# BUILTIN CONS _::_ #-}
+{-# BUILTIN NIL [] #-}
 
 infixr 40 _::_
 
@@ -47,9 +53,6 @@ map-preserve-length : ∀ {ℓ} {A B : Set ℓ} → (f : A → B) → (xs : 𝕃
 map-preserve-length f [] = refl
 map-preserve-length f (x :: xs) rewrite map-preserve-length f xs = refl
 
-_∘_ : ∀ {ℓ} {A : Set ℓ}{B : A → Set ℓ}{C : {x : A} → B x → Set ℓ}
-    → (f : {x : A} → (y : B x) → C y) → (g : (x : A) → B x) → ((x : A) → C (g x))
-f ∘ g = λ x → f (g x)
 
 map-id : ∀ {ℓ} {A : Set ℓ} → (xs : 𝕃 A) → map (λ x → x) xs ≡ xs
 map-id [] = refl
@@ -161,9 +164,12 @@ _∈ₙ_ : ℕ → 𝕃 ℕ → 𝔹
 x ∈ₙ [] = ff
 x ∈ₙ (y :: ys) = if (x == y) then tt else (x ∈ₙ ys)
 
-_⊆ₙ_ : 𝕃 ℕ → 𝕃 ℕ → 𝔹
-[] ⊆ₙ ys = tt
-(x :: xs) ⊆ₙ ys = if (x ∈ₙ ys) then xs ⊆ₙ ys else ff
+data _∈_ {A : Set}(x : A) : 𝕃 A → Set where
+  hd : ∀ {xs} → x ∈ x :: xs
+  tl : ∀ {y xs} → x ∈ xs → x ∈ y :: xs
+
+_⊆_ : ∀ {A : Set}(xs ys : 𝕃 A) → Set
+xs ⊆ ys = ∀ {x} → x ∈ xs → x ∈ ys
 
 zipWith : ∀ {ℓ} → ∀ {A B C : Set ℓ } → (f : A → B → C) → (𝕃 A) → (𝕃 B) → 𝕃 C
 zipWith f [] _ = []
@@ -193,3 +199,26 @@ concat-map (xs :: xss) f rewrite
   sym (++-homo xs (concat xss) f)
   = refl
 
+index : ∀ {A} {x : A} {xs} → x ∈ xs → ℕ
+index hd = zero
+index (tl p) = suc (index p)
+
+data Lookup {A : Set}(xs : 𝕃 A) : ℕ -> Set where
+  inside : (x : A)(p : x ∈ xs) -> Lookup xs (index p)
+  outside : (m : ℕ) -> Lookup xs (length xs + m)
+
+_!_ : {A : Set}(xs : 𝕃 A)(n : ℕ) -> Lookup xs n
+[] ! n = outside n
+(x :: xs) ! zero = inside x hd
+(x :: xs) ! suc n with xs ! n
+(x :: xs) ! suc .(index p)       | inside y p = inside y (tl p)
+(x :: xs) ! suc .(length xs + n) | outside n = outside n
+
+
+∈-relax-right : ∀ {A} {x : A} {xs ys} → x ∈ xs → x ∈ (xs ++ ys)
+∈-relax-right hd = hd
+∈-relax-right (tl y) = tl (∈-relax-right y)
+
+∈-relax-left : ∀ {A} {y : A} xs {ys} → y ∈ ys → y ∈ (xs ++ ys)
+∈-relax-left [] p = p
+∈-relax-left (_ :: xs) p = tl (∈-relax-left xs p)

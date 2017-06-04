@@ -1,11 +1,10 @@
-module MyFunctor where
+module NAL.Algebra.Functor where
 
-open import Agda.Primitive
-open import MyList
-open import MyBool
-open import MyNats
+open import NAL.Data.List
+open import NAL.Data.Bool
+open import NAL.Data.Nats
 
-open import Utils
+open import NAL.Utils.Core
 
 const : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂} → A → B → A
 const a _ = a

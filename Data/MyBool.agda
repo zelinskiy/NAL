@@ -1,4 +1,4 @@
-module MyBool where
+module NAL.Data.Bool where
 
 open import Utils
 

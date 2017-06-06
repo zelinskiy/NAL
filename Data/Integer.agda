@@ -54,6 +54,7 @@ module Private2 where
 
 open Private2
 
+infixl 100 _+_
 _+_ : ℤ → ℤ → ℤ
 (Int 0 _) + y = y
 x + (Int 0 _) = x
@@ -131,6 +132,8 @@ lemma5 {ff} {ff} ()
                     | lemma2 {y} {x}{ysign}{xsign} (xor-comm{xsign}{ysign} p) (lemma5 p q)
                     = refl
 
+infixl 40 _≤_
+
 _≤_ : ℤ → ℤ → 𝔹
 (Int 0 _) ≤ (Int 0 _) = tt
 Int 0 _ ≤ Int (suc _) ysign = ysign
@@ -156,6 +159,7 @@ neg : ℤ → ℤ
 neg (Int 0 _) = (Int 0 _)
 neg (Int (suc x) s) = Int (suc x) (¬ s)
 
+infixl 70 _-_
 _-_ : ℤ → ℤ → ℤ
 x - y = x + neg y
 
@@ -163,7 +167,7 @@ abs : ℤ → ℤ
 abs (Int 0 ⊤-intro) = Int 0 ⊤-intro
 abs (Int (suc n) _) = Int (suc n) tt
 
-
+infixl 60 _*_
 _*_ : ℤ → ℤ → ℤ
 (Int 0 _) * (Int 0 _) = (Int 0 _)
 (Int 0 _) * _ = (Int 0 _)

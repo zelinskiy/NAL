@@ -245,3 +245,24 @@ parity (suc n) with parity n
 parity (suc n) | Left x = Right (even x)
 parity (suc n) | Right y = Left (odd y)
 
+{-
+lemma10 : ∀{x y} → suc x == suc y ≡ tt → x == y ≡ tt
+lemma10 {zero} {zero} p = refl
+lemma10 {zero} {suc y} ()
+lemma10 {suc x} {zero} ()
+lemma10 {suc x} {suc y} p = p
+
+lemma11 : ∀{x y} → suc x ≡ suc y → x ≡ y
+lemma11 {x} {y} p = ==-to-≡ (lemma10{x}{y} (≡-to-== p))
+
+
+--*rdistr+ : ∀ (x y z : ℕ) → (x + y) * z ≡ x * z + y * z
+--*ldistr+ : ∀ (x y z : ℕ) → x * (y + z) ≡ x * y + x * z
+--(n + n * n) ≡ (m + suc m) * suc m
+--*suc-lemma : ∀ (x y : ℕ) → x * (suc y) ≡ x + x * y
+sqrt2 : (n m : ℕ) → n * n ≡ 2 * m * m → m ≡ 0
+sqrt2 zero zero p = refl
+sqrt2 (suc n) zero p = refl
+sqrt2 zero (suc m) ()
+sqrt2 (suc n) (suc m) p rewrite +0 m  | lemma11 p = {!!}
+-}

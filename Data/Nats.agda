@@ -2,8 +2,11 @@ module NAL.Data.Nats where
 
 
 open import NAL.Utils.Core
+open import NAL.Utils.Rel
 open import NAL.Data.Bool
 open import NAL.Data.Either3
+open import NAL.Data.Pair
+open import NAL.Data.Either
 open import NAL.Utils.Function
 
 data ℕ : Set where
@@ -91,25 +94,14 @@ infixl 30 _*_
 *ldistr+ x zero z rewrite *comm x (zero + z) | *0 x   = refl
 *ldistr+ x (suc y) z rewrite *suc-lemma x (y + z) | *suc-lemma x y | *ldistr+ x y z | +assoc x (x * y) (x * z)= refl
 
--- x * (zero + z) ≡ x * zero + x * z
--- z * x ≡ x * 0 + z * x
--- z * x ≡ 0 + z * x
-
---*suc-lemma : ∀ (x y : ℕ) → x * (suc y) ≡ x + x * y
---+assoc : ∀ (x y z : ℕ) → x + (y + z) ≡ (x + y) + z
-
--- x * (suc y + z) ≡ x * suc y + x * z
--- x + x * (y + z) ≡ x * suc y + x * z
--- x + x * (y + z) ≡ x + x * y + x * z
--- x + (x * y + x * z) ≡ x + x * y + x * z
--- x + x * y + x * z ≡ x + x * y + x * z
-
 _<_ : ℕ → ℕ → 𝔹
 zero < zero = ff
 zero < suc y = tt
 suc x < zero = ff
 suc x < suc y = x < y
 
+infixl 50 _<_
+infixl 50 _>_
 
 _>_ : ℕ → ℕ → 𝔹
 _>_ = flip _<_
@@ -162,6 +154,7 @@ suc x ≤ suc y = x ≤ y
 ≤-suc zero = refl
 ≤-suc (suc n) rewrite ≤-suc n = refl
 
+infix 20 _==_
 
 _==_ : ℕ → ℕ → 𝔹
 zero == zero = tt
@@ -235,3 +228,20 @@ _∸_ : (x y : ℕ) → ℕ
 x ∸ 0 = x
 0 ∸ suc y = 0
 suc x ∸ suc y = x ∸ y
+
+data Even : ℕ → Set
+data Odd  : ℕ → Set
+
+data Even where
+  zero : Even zero
+  odd  : ∀ {n} → Odd n → Even (suc n)
+
+data Odd where
+  even : ∀ {n} → Even n → Odd (suc n)
+
+parity : ∀ n → Either (Even n) (Odd n)
+parity zero = Left zero
+parity (suc n) with parity n
+parity (suc n) | Left x = Right (even x)
+parity (suc n) | Right y = Left (odd y)
+

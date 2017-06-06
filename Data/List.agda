@@ -1,7 +1,6 @@
 module NAL.Data.List where
 
 open import NAL.Utils.Core
-LEM⊢Pierce
 open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Data.Pair
@@ -168,8 +167,17 @@ data _∈_ {A : Set}(x : A) : 𝕃 A → Set where
   hd : ∀ {xs} → x ∈ x :: xs
   tl : ∀ {y xs} → x ∈ xs → x ∈ y :: xs
 
+{-
 _⊆_ : ∀ {A : Set}(xs ys : 𝕃 A) → Set
 xs ⊆ ys = ∀ {x} → x ∈ xs → x ∈ ys
+-}
+
+data _⊆_ {A : Set} : 𝕃 A → 𝕃 A → Set where
+  _subset_ : ∀ {x xs ys} → x ∈ xs → x ∈ ys → xs ⊆ ys
+
+
+THM2 : 1 :: 2 :: [] ⊆ 3 :: 2 :: 1 :: []
+THM2 = tl hd subset tl hd
 
 zipWith : ∀ {ℓ} → ∀ {A B C : Set ℓ } → (f : A → B → C) → (𝕃 A) → (𝕃 B) → 𝕃 C
 zipWith f [] _ = []
@@ -189,6 +197,9 @@ concat = foldr _++_ []
 
 singleton : ∀ {ℓ} {A : Set ℓ} → A → 𝕃 A
 singleton x = x :: []
+
+[_] : ∀ {ℓ} {A : Set ℓ} → A → 𝕃 A
+[ x ] = singleton x
 
 concat-map : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂} →
   (xss : 𝕃 (𝕃 A)) (f : A → B) →
@@ -222,3 +233,4 @@ _!_ : {A : Set}(xs : 𝕃 A)(n : ℕ) -> Lookup xs n
 ∈-relax-left : ∀ {A} {y : A} xs {ys} → y ∈ ys → y ∈ (xs ++ ys)
 ∈-relax-left [] p = p
 ∈-relax-left (_ :: xs) p = tl (∈-relax-left xs p)
+

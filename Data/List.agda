@@ -4,6 +4,7 @@ open import NAL.Utils.Core
 open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Data.Pair
+open import NAL.Data.Eq
 open import NAL.Utils.Function
 
 data 𝕃 {ℓ} (A : Set ℓ) : Set ℓ where
@@ -234,3 +235,23 @@ _!_ : {A : Set}(xs : 𝕃 A)(n : ℕ) -> Lookup xs n
 ∈-relax-left [] p = p
 ∈-relax-left (_ :: xs) p = tl (∈-relax-left xs p)
 
+
+nub : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → 𝕃 A → 𝕃 A
+nub xs = nub0 xs (length xs)
+  where
+    nub0 : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → 𝕃 A → ℕ → 𝕃 A
+    nub0 (x :: xs) (suc fuel) = x :: nub0 (filter (λ y → ¬ (x is y)) xs) fuel
+    nub0 [] (suc fuel) = []
+    nub0 _ 0 = []
+
+
+
+range : ℕ → ℕ → 𝕃 ℕ
+range x y = reverse (y :: h x y)
+  where
+    h : ℕ → ℕ → 𝕃 ℕ
+    h x (suc y) = if x < y then y :: h x y else [ y ]
+    h x 0 = []
+
+[_-_] : ℕ → ℕ → 𝕃 ℕ
+[ a - b ] = range a b

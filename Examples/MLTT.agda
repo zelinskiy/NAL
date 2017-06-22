@@ -1,5 +1,31 @@
 module NAL.Examples.MLTT where
 
+data Eq (A : Set) : Set where
+  _==_ : (a b : A) → Eq A
+
+-- Π-form
+Π : (A : Set) (B : A → Set) → Set
+Π A B = (a : A) → B a
+
+--Π-form=
+
+Π-intro : {A : Set}{B : A → Set} → (b : (a : A) → B a) → Π A B
+Π-intro b = λ x → b x
+
+--Π-intro=
+
+Ap[_,_] : {A : Set}{B : A → Set} → (c : Π A B) → (a : A) → B a
+Ap[ c , a ] = c a
+
+Π-elim : {A : Set}{B : A → Set} → (c : Π A B) → (a : A) → B a
+Π-elim c a = Ap[ c , a ]
+
+--Π-elim=
+
+--Π-eq
+
+
+
 id : {A : Set} → A → A
 id = λ x → x
 
@@ -46,8 +72,7 @@ record Σ (A : Set) (P : A → Set) : Set where
     
 open Σ public
 
-Π : (A : Set) (B : A → Set) → Set
-Π A B = (a : A) → B a
+
 
 ΠΣ : {A : Set} {B : A → Set} → Π A B → (a : A) → Σ A B
 ΠΣ f x = Σ x , f x

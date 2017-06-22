@@ -1,8 +1,10 @@
 module NAL.Algebra.Functor where
 
 open import NAL.Data.List
+open import NAL.Utils.Function
 open import NAL.Data.Bool
 open import NAL.Data.Nats
+open import NAL.Data.Maybe
 
 open import NAL.Utils.Core
 
@@ -33,6 +35,12 @@ instance
     law1 = map-id;
     law2 = map-∘ }
 
+instance
+  functorMaybe : ∀ {ℓ} → Functor (Maybe {ℓ})
+  functorMaybe = record {
+    fmap = λ { f Nothing → Nothing; f (Just x) → Just (f x) };
+    law1 = λ { Nothing → refl ; (Just x) → refl };
+    law2 = λ { f g Nothing → refl ; f g (Just x) → refl } }
 
 fmap2 : {A B : Set } {F : Set → Set} {G : Set → Set}
   {{r1 : Functor G }} {{r2 : Functor F}} →

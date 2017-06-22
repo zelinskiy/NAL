@@ -266,3 +266,6 @@ sqrt2 (suc n) zero p = refl
 sqrt2 zero (suc m) ()
 sqrt2 (suc n) (suc m) p rewrite +0 m  | lemma11 p = {!!}
 -}
+
+
+

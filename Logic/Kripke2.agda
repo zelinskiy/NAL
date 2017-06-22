@@ -1,4 +1,4 @@
-module NAL.Logic.Kripke where
+module NAL.Logic.Kripke2 where
 
 open import NAL.Data.String
 open import NAL.Data.List
@@ -31,35 +31,36 @@ infixl 70 ¬_
 ¬ a = a ⊃ False
 
 
-Context : Set
-Context = 𝕃 Formula
+Context : Set₁
+Context = Set
 
+infixl 5 _⊢_
 
 data _⊢_ : Context → Formula → Set where
-  Assume     : ∀ {Γ f} → f :: Γ ⊢ f
-  Weaken     : ∀ {Γ f g} → Γ ⊢ f → g :: Γ ⊢ f
-  Swap       : ∀ {Γ f g h} → f :: g :: Γ ⊢ h → g :: f :: Γ ⊢ h
-  Contract   : ∀ {Γ f h} → f :: Γ ⊢ h → f :: f :: Γ ⊢ h
-  Cut        : ∀ {Γ Δ f g} → Γ ⊢ f → f :: Δ ⊢ g → (Γ ++ Δ) ⊢ g
+  Assume     : ∀ {Γ f} → f ∈ Γ ⊢ f
+  Weaken     : ∀ {Γ f g} → Γ ⊢ f → g ∈ Γ ⊢ f
+--  Swap       : ∀ {Γ f g h} → f ∈ g ∈ Γ ⊢ h → g ∈ f ∈ Γ ⊢ h
+--  Contract   : ∀ {Γ f h} → f ∈ Γ ⊢ h → f ∈ f ∈ Γ ⊢ h
+  Cut        : ∀ {Γ Δ f g} → Γ ⊢ f → f ∈ Δ ⊢ g → (Γ ++ Δ) ⊢ g
 
-  ⊃-IntroR   : ∀ {Γ f g} → f :: Γ ⊢ g → Γ ⊢ f ⊃ g
-  ⊃-IntroL   : ∀ {Γ f g h} → Γ ⊢ f → g :: Γ ⊢ h → (f ⊃ g) :: f :: Γ ⊢ h
+  ⊃-IntroR   : ∀ {Γ f g} → f ∈ Γ ⊢ g → Γ ⊢ f ⊃ g
+--  ⊃-IntroL   : ∀ {Γ f g h} → Γ ⊢ f → g ∈ Γ ⊢ h → (f ⊃ g) ∈ f ∈ Γ ⊢ h
   ⊃-ElimR     : ∀ {Γ f g} → Γ ⊢ f ⊃ g → Γ ⊢ f → Γ ⊢ g
   
   &-IntroR    : ∀ {Γ f g} → Γ ⊢ f → Γ ⊢ g → Γ ⊢ f & g
-  &-IntroL    : ∀ {Γ f g h} → f :: g :: Γ ⊢ h → f & g :: Γ ⊢ h
+--  &-IntroL    : ∀ {Γ f g h} → f ∈ g ∈ Γ ⊢ h → f & g ∈ Γ ⊢ h
   &-ElimR1    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ f
   &-ElimR2    : ∀ {Γ f g} → Γ ⊢ f & g → Γ ⊢ g
 
-
   ∨-IntroR1   : ∀ {Γ f g} → Γ ⊢ f → Γ ⊢ f ∨ g
   ∨-IntroR2   : ∀ {Γ f g} → Γ ⊢ g → Γ ⊢ f ∨ g
-  ∨-IntroL    : ∀ {Γ f g h} → f :: Γ ⊢ h → g :: Γ ⊢ h → f ∨ g :: Γ ⊢ h
+  ∨-IntroL    : ∀ {Γ f g h} → f ∈ Γ ⊢ h → g ∈ Γ ⊢ h → f ∨ g ∈ Γ ⊢ h
   ∨-ElimR    : ∀ {Γ f g h} → Γ ⊢ f ∨ g → Γ ⊢ f ⊃ h → Γ ⊢ g ⊃ h → Γ ⊢ h
 
-  False-Intro : ∀ {Γ f g} → f :: Γ ⊢ g → f :: Γ ⊢ ¬ g → Γ ⊢ ¬ f
+  False-Intro : ∀ {Γ f g} → f ∈ Γ ⊢ g → f ∈ Γ ⊢ ¬ g → Γ ⊢ ¬ f
   False-Elim : ∀ {Γ f g} → Γ ⊢ ¬ f → Γ ⊢ f ⊃ g
 
+{-
 record KripkeFrame : Set₁ where
   field
     W : Set
@@ -188,13 +189,12 @@ completeness {Γ} p = CompletenessU (p{U}{Γ} (ctxt-id{Γ}))
 
 nbe : ∀ {Γ f} → Γ ⊢ f → Γ ⊢ f
 nbe {Γ} p = completeness (soundness p)
-
+-}
 
 module Test0 where
-  AndTrans : [] ⊢ var "P" & var "Q" ⊃ var "Q" & var "P"
-  AndTrans = ⊃-IntroR (&-IntroL (&-IntroR(Weaken Assume) (Swap (Weaken Assume))))
+  --AndTrans : [] ⊢ var "P" & var "Q" ⊃ var "Q" & var "P"
+  --AndTrans = ⊃-IntroR (&-IntroL (&-IntroR(Weaken Assume) (Swap (Weaken Assume))))
                  
-
   {-
                      ------ Assume    
                      P ⊢ P           
@@ -207,19 +207,7 @@ module Test0 where
   ------------------------------ &-IntroL
            P & Q ⊢ Q & P
   ------------------------------ ⊃-IntroR
-           ⊢ P & Q ⊃ Q & P
-     
+           ⊢ P & Q ⊃ Q & P     
   -}
-
-  LEM⊢Pierce : var "A" ∨ ¬ var "A" :: [] ⊢ ((var "A" ⊃ var "B") ⊃ var "A") ⊃ var "A"
-  LEM⊢Pierce = {!!}
-
-  T1 : var "Q" :: [] ⊢ var "P" ⊃ var "Q"
-  T1 = ⊃-IntroR (⊃-ElimR (⊃-IntroR (Weaken (Weaken Assume))) Assume)
-  T1N = nbe T1
-
-{-
-  T3 : (var "A" ⊃ var "Q") :: (var "A" ⊃ var "Q") :: (var "A" ⊃ var "Q") :: [] ⊢ var "Q"
-  T3 = {!!}
--}
+  
 open Test0

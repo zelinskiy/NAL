@@ -185,7 +185,7 @@ zipWith f _ [] = []
 zipWith f (x :: xs) (y :: ys) = f x y :: zipWith f xs ys
 
 zipLists : ∀ {ℓ} → ∀ {A B : Set ℓ} → (𝕃 A) → (𝕃 B) → 𝕃 ⟪ A , B ⟫
-zipLists = zipWith <_,_>
+zipLists = zipWith ⟨_,_⟩
 
 
 foldr : ∀ {ℓ} {A B : Set ℓ} → (A → B → B) → B → 𝕃 A → B

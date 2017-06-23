@@ -19,8 +19,18 @@ record Monad {ℓ₁ ℓ₂} (M : Set ℓ₁ → Set ℓ₂) : Set (lsuc ℓ₁ 
   _>=>_ : ∀ {A B C : Set ℓ₁}  → (A → M B) → (B → M C) → (A → M C)
   f >=> g = \x -> f x >>= g
 
+  
+
 open Monad {{...}} public
 
+{-
+-- | Promote a function to a monad.
+liftM   :: (Monad m) => (a1 -> r) -> m a1 -> m r
+liftM f m1              = do { x1 <- m1; return (f x1) }
+-}
+
+liftM : ∀{ℓ₁ ℓ₂} {M : Set ℓ₁ → Set ℓ₂} {{_ : Monad M}} {A R : Set ℓ₁} → (A → R) → M A → M R 
+liftM f m = m >>= λ x → return (f x)
 
 module MaybeMonad where 
 
@@ -81,7 +91,7 @@ module ListMonad where
     concat (map f xss) ≡ f (concat xss)
   lemma1 = ?
   -}
-  
+  {-
   bind-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} →
            (xs : 𝕃 A) (f : A → 𝕃 B) (g : B → 𝕃 C) →
     concat (map g (concat (map f xs))) ≡
@@ -98,7 +108,7 @@ module ListMonad where
               lidentity = leftid;
               ridentity = rightid;
               assoc = bind-assoc }
-  
+  -}
 
 
   

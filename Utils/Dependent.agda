@@ -25,3 +25,5 @@ ac : {A B : Set} →
   ((a : A) → Σ B (λ b → R a b )) →
   Σ (A → B) (λ f → ((a : A) → R a (f a)))
 ac g = Σ (λ a → π₁ (g a)) , (λ a → π₂ (g a))
+
+

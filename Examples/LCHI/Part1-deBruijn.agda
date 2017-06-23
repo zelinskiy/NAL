@@ -16,6 +16,8 @@ infixr 50 ƛ_
 
 -- ??? n of reductions
 --- normalization (Maybe nf)
+-- Conversion from normal
+-- pretty printing (and reading)
 
 --using de Bruijn indices
 --(λx.λy.λz.xyz >>> λ2.λ1.λ0.210)

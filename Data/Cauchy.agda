@@ -12,6 +12,9 @@ open import NAL.Utils.Dependent
 --Cauchy(a) ≡ (∀e ∈ Q) (e > 0 ⊃ (∃m ∈ N) (∀n ∈ N) (|am+n − am| ≤ e)),
 -- ∀ε. ε > 0 ⊃ ∃x. ∀y. |f(x + y) - f(x)| ≤ ε
 
+-- For even more see
+-- Constructive Analysis by E. Bishop
+
 Cauchy : (f : ℕ → ℚ) → Set
 Cauchy f = (ε : ℚ) → ℚ0 < ε ≡ tt → Σ ℕ λ x → (y : ℕ) → abs (f (x + y) - f x) ≤ ε ≡ tt
  
@@ -31,8 +34,10 @@ Cauchy f = (ε : ℚ) → ℚ0 < ε ≡ tt → Σ ℕ λ x → (y : ℕ) → abs
     helper ((Int 0 ⊤-intro) / (Int (suc y) ff)) p = refl             
     helper ((Int (suc x) tt) / (Int 0 ⊤-intro)) p = refl
     helper ((Int (suc x) ff) / (Int 0 ⊤-intro)) p = p             
-    helper ((Int 0 ⊤-intro) / (Int 0 ⊤-intro)) p = refl
-    
+    helper ((Int 0 ⊤-intro) / (Int 0 ⊤-intro)) p = postulate
+  
+
+
 {-
 helper : (e : ℚ) → ℚ0 < e ≡ tt → (w : ℕ) → (abs (√2 (0 + w) - √2 0) ≤ e) ≡ tt
 helper (Int (suc x) tt / Int (suc y) tt) p zero = refl

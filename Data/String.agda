@@ -4,6 +4,7 @@ open import NAL.Data.Char
 open import NAL.Data.List
 open import NAL.Data.Bool
 open import NAL.Data.Eq
+open import NAL.Data.Comparable
 
 postulate String : Set
 {-# BUILTIN STRING String #-}
@@ -19,3 +20,9 @@ primitive
 instance
   EqString : Eq String
   EqString = record {_is_ = primStringEquality}
+
+
+instance
+  ComparableString : Comparable String
+  ComparableString = record {compare = λ a b → compare (primStringToList a) (primStringToList b)}
+      

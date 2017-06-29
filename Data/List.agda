@@ -5,7 +5,9 @@ open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Data.Pair
 open import NAL.Data.Eq
+
 open import NAL.Utils.Function
+
 
 data 𝕃 {ℓ} (A : Set ℓ) : Set ℓ where
   [] : 𝕃 A
@@ -189,7 +191,7 @@ zipLists : ∀ {ℓ} → ∀ {A B : Set ℓ} → (𝕃 A) → (𝕃 B) → 𝕃 
 zipLists = zipWith ⟨_,_⟩
 
 
-foldr : ∀ {ℓ} {A B : Set ℓ} → (A → B → B) → B → 𝕃 A → B
+foldr : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁}{B : Set ℓ₂} → (A → B → B) → B → 𝕃 A → B
 foldr f i [] = i
 foldr f i (x :: xs) = f x (foldr f i xs)
 
@@ -255,3 +257,12 @@ range x y = reverse (y :: h x y)
 
 [_-_] : ℕ → ℕ → 𝕃 ℕ
 [ a - b ] = range a b
+
+all : ∀{ℓ}{A : Set ℓ} → (A → 𝔹) → 𝕃 A → 𝔹
+all f = foldr (λ x y → y ∧ f x) tt
+
+any : ∀{ℓ}{A : Set ℓ} → (A → 𝔹) → 𝕃 A → 𝔹
+any f = foldr (λ x y → y ∨ f x) ff
+
+and : 𝕃 𝔹 → 𝔹
+and xs = all (λ x → x) xs

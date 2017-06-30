@@ -23,6 +23,25 @@ LeftDistributive _⊗_ _⊕_ = ∀ x y z → (x ⊗ (y ⊕ z)) ≡ ((x ⊗ y) �
 RightDistributive : ∀ {ℓ} {A : Set ℓ} → (⊗ ⊕ : A → A → A) → Set ℓ
 RightDistributive _⊗_ _⊕_ = ∀ x y z → ((y ⊕ z) ⊗ x) ≡ ((y ⊗ x) ⊕ (z ⊗ x))
 
+LeftAbsorption : ∀ {ℓ} {A : Set ℓ} → (⊗ ⊕ : A → A → A) → Set ℓ
+LeftAbsorption _⊗_ _⊕_ = ∀ a b → a ⊗ (a ⊕ b) ≡ a
+
+RightIdentity : ∀ {ℓ} {A : Set ℓ} → (A → A → A) → A → Set ℓ
+RightIdentity _∙_ ε = ∀ a → a ∙ ε ≡ a
+
+LeftIdentity : ∀ {ℓ} {A : Set ℓ} → (A → A → A) → A → Set ℓ
+LeftIdentity _∙_ ε = ∀ a → ε ∙ a ≡ a
+
+Idempotent : ∀ {ℓ} {A : Set ℓ} → (A → A → A) → Set ℓ
+Idempotent _∙_ = ∀ a → a ∙ a ≡ a
+
+
+LeftComplement : ∀ {ℓ} {A : Set ℓ} → (A → A) → (A → A → A) → A → Set ℓ
+LeftComplement ¬_ _∙_ ε = ∀ a → (¬ a) ∙ a ≡ ε
+
+RightComplement : ∀ {ℓ} {A : Set ℓ} → (A → A) → (A → A → A) → A → Set ℓ
+RightComplement ¬_ _∙_ ε = ∀ a → a ∙ (¬ a) ≡ ε
+
 rdistr+comm→ldistr : ∀ {ℓ} {A : Set ℓ} → (_*_ _+_ : A → A → A) →
   Commutative _*_ →
   RightDistributive _*_ _+_ →
@@ -47,3 +66,19 @@ ldistr+comm→rdistr  _*_ _+_ *c +c d x y z
   | *c x y
   | *c x z
   = refl
+
+private
+  lemma1 : ∀ {ℓ} {A : Set ℓ} →
+    (_*_ _+_ : A → A → A) →
+    (0' : A) →
+    RightIdentity _+_ 0' →
+    (∀ a b → a * b ≡ a * (b + 0'))
+  lemma1 _*_ _+_ 0' p a b rewrite p b = refl
+
+absorp+id→idemp : ∀ {ℓ} {A : Set ℓ} →
+  (_*_ _+_ : A → A → A) →
+  (0' : A) →
+  LeftAbsorption _*_ _+_ →
+  RightIdentity _+_ 0' →
+  Idempotent _*_
+absorp+id→idemp _*_ _+_ 0' abs rid a rewrite lemma1 _*_ _+_ 0' rid a a | abs a 0' = refl

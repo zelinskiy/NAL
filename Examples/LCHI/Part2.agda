@@ -6,6 +6,7 @@ open import NAL.Data.ListSet renaming (_∪_ to _∪LS_; _∩_ to _∩LS_;  _─
 open import NAL.Data.Eq hiding (_is_)
 open import NAL.Data.Comparable
 open import NAL.Data.Fin
+open import NAL.Data.Either
 open import NAL.Data.Bool renaming (¬_ to not𝔹; _∧_ to and𝔹; _∨_ to or𝔹)
 open import NAL.Utils.Core renaming (⊥ to Bot)
 
@@ -44,6 +45,7 @@ data _⊢_ : Context → Φ → Set where
   Ax : ∀ {Γ φ} → φ :: Γ ⊢ φ
   Weak : ∀ {Γ φ ψ} → Γ ⊢ φ → ψ :: Γ ⊢ φ
   Sub : ∀ {Γ φ ψ p} → Γ ⊢ φ → map (_[ p := ψ ]) Γ ⊢ φ [ p := ψ ]
+  Shift : ∀ {n Γ φ} → Γ ⊢ φ → shift n Γ ⊢ φ
 
   ⊃I : ∀ {Γ φ ψ} → φ :: Γ ⊢ ψ → Γ ⊢ φ ⊃ ψ
   ⊃E : ∀ {Γ φ ψ} → Γ ⊢ φ ⊃ ψ → Γ ⊢ φ → Γ ⊢ ψ
@@ -60,6 +62,23 @@ data _⊢_ : Context → Φ → Set where
 
 Valuation : ∀ {ℓ} → Set ℓ → Set ℓ
 Valuation A = String → A
+
+
+module ⊢-examples where
+  Ex1 : ∀ {φ} → [] ⊢ φ ⊃ φ
+  Ex1 {φ} = ⊃I Ax
+
+  Ex2 : ∀{φ ψ} → [] ⊢ φ ⊃ (ψ ⊃ φ)
+  Ex2 {φ} {ψ} = ⊃I (⊃I (Weak Ax))
+
+  Ex3 : ∀{φ ψ ν} → [] ⊢ (φ ⊃ (ψ ⊃ ν)) ⊃ (φ ⊃ ψ) ⊃ (φ ⊃ ν)
+  Ex3 {φ} {ψ} {ν} = ⊃I (⊃I (⊃I (⊃E {Γ}{ψ}{ν} (⊃E{Γ}{φ}{ψ ⊃ ν}(Shift {3} {Γ} (Weak (Weak Ax))) Ax) (⊃E (Weak Ax) Ax))))
+    where Γ = φ :: (φ ⊃ ψ) :: (φ ⊃ (ψ ⊃ ν)) :: []
+  {-
+  Ex4 : ∀{φ ψ} → [] ⊢ (φ ⊃ ψ) ⊃ (¬ ψ ⊃ ¬ φ)
+  Ex4 {φ} {ψ} = ⊃I (⊃I (⊃I {!!}))
+  -}
+
 
 --𝔹 = Fin 2
 module 𝔹-semantics where
@@ -130,51 +149,154 @@ module ℛ-semantics where
 
 open import NAL.Utils.Function
 
+-- Def 2.3.5 misses absorption laws, why ???
 
 record BooleanAlgebra {ℓ} (B : Set ℓ) : Set ℓ where
   field
    _∪_ _∩_ : B → B → B
    ─_ : B → B
    0' 1' : B
-   ∪-assoc : Associative _∪_
-   ∪-comm : Commutative _∪_
+   -- Associativity
+   ∪-assoc : Associative _∪_   
    ∩-assoc : Associative _∩_
+   --Commutativity
+   ∪-comm : Commutative _∪_
    ∩-comm : Commutative _∩_
+   --Distributivity
    ∪-distr-∩ : RightDistributive _∪_ _∩_
    ∩-distr-∪ : RightDistributive _∩_ _∪_
-   a∪0≡a : ∀ a → a ∪ 0' ≡ a
-   a∩1≡a : ∀ a → a ∩ 1' ≡ a
-   -a∪a≡1 : ∀ a → (─ a) ∪ a ≡ 1'
-   -a∩a≡0 : ∀ a → (─ a) ∩ a ≡ 0'
+   --Identity
+   a∪0≡a : RightIdentity _∪_ 0'
+   a∩1≡a : RightIdentity _∩_ 1'
+   --Complement
+   -a∪a≡1 : LeftComplement ─_ _∪_ 1'
+   -a∩a≡0 : LeftComplement ─_ _∩_ 0'
+   -- Absorption
+   ∩-abs-∪ : LeftAbsorption _∩_ _∪_
+   ∪-abs-∩ : LeftAbsorption _∪_ _∩_
 
 -- Example : ⟨𝔹, OR, AND, NOT, 0, 1⟩
 -- Example : ⟨Fin 2, max, min, 1 - x, 0, 1⟩
 
 
--- define a ≤ b iff a ∪ b = b
 record HeytingAlgebra {ℓ} (B : Set ℓ) : Set ℓ where
   field
-   _∪_ _∩_ _⇒_ _≤_ : B → B → B
-   ─_ : B → B
-   0' 1' : B
-   ∪-assoc : Associative _∪_
+  --===Lattice part==
+   _∪_ _∩_ : B → B → B      
+   --Commutativity
    ∪-comm : Commutative _∪_
-   ∩-assoc : Associative _∩_
    ∩-comm : Commutative _∩_
-   ∪-distr-∩ : RightDistributive _∪_ _∩_
-   ∩-distr-∪ : RightDistributive _∩_ _∪_
-   a∪0≡a : ∀ a → a ∪ 0' ≡ a
-   a∩1≡a : ∀ a → a ∩ 1' ≡ a
-   a∪a≡a : ∀ a → a ∪ a ≡ a
-   -a≡a⇒0 : ∀ a → (─ a) ≡ a ⇒ 0'
-   -- must be (a ∩ c) ≤ b ⇆ c ≤ (a ⇒ b)
-   a∩c≤b : ∀ a b c → (a ∩ c) ≤ b ≡ c ≤ (a ⇒ b)
+    -- Associativity
+   ∪-assoc : Associative _∪_   
+   ∩-assoc : Associative _∩_
+   -- Absorption
+   ∩-abs-∪ : LeftAbsorption _∩_ _∪_
+   ∪-abs-∩ : LeftAbsorption _∪_ _∩_
+   --Idempotency
+   ∪-idemp : Idempotent _∪_
+   ∩-idemp : Idempotent _∩_   
+   --===Bounded Lattice part===
+   0' 1' : B
+   --Identity
+   a∪0≡a : RightIdentity _∪_ 0'
+   a∩1≡a : RightIdentity _∩_ 1'
+   --===Pseudo Complement===
+   ─_ : B → B
+   --===Relative Pseudo Complement===
+   _⇒_ : B → B → B
+   a⇒a≡1 : ∀ a → a ⇒ a ≡ 1'
+   a∩a⇒b≡a∩b : ∀ a b → a ∩ (a ⇒ b) ≡ a ∩ b
+   b∩a⇒b≡b : ∀ a b → b ∩ (a ⇒ b) ≡ b
+   ⇒-dist : LeftDistributive _⇒_ _∩_
+   ─a≡a⇒0 : ∀ a → ─ a ≡ a ⇒ 0'
+   
+  _≤_ : B → B → Set ℓ
+  a ≤ b = b ⇒ a ≡ 1'
+  {-
+  ∪-deMorgan : ∀ a b → ─ (a ∪ b) ≡ (─ a) ∩ (─ b)
+  ∪-deMorgan a b  = {!!}
+  -}
 
 module ℋ-semantics where
   _⟦_⟧ : ∀{ℓ}{ℋ : Set ℓ}{{_ : HeytingAlgebra ℋ}} → Valuation ℋ → Φ → ℋ
-  _⟦_⟧ v (var p) = v p
-  _⟦_⟧ {{ha}} v ⊥  = 0' ha where open HeytingAlgebra
-  _⟦_⟧ {{ha}} v (φ ∨ ψ) = HeytingAlgebra._∪_ ha (v ⟦ φ ⟧) (v ⟦ ψ ⟧)
-  _⟦_⟧ {{ha}} v (φ ∧ ψ) = HeytingAlgebra._∩_ ha (v ⟦ φ ⟧) (v ⟦ ψ ⟧)
-  _⟦_⟧ {{ha}} v (φ ⊃ ψ) = HeytingAlgebra._⇒_ ha (v ⟦ φ ⟧) (v ⟦ ψ ⟧)
-    
+  _⟦_⟧ {{ha}} v (var p) = v p
+  _⟦_⟧ {{ha}} v ⊥  = 0' where open HeytingAlgebra ha
+  _⟦_⟧ {{ha}} v (φ ∨ ψ) = (v ⟦ φ ⟧) ∪ (v ⟦ ψ ⟧)  where open HeytingAlgebra ha
+  _⟦_⟧ {{ha}} v (φ ∧ ψ) = (v ⟦ φ ⟧) ∩ (v ⟦ ψ ⟧) where open HeytingAlgebra ha
+  _⟦_⟧ {{ha}} v (φ ⊃ ψ) = (v ⟦ φ ⟧) ⇒ (v ⟦ ψ ⟧) where open HeytingAlgebra ha
+
+  _,_⊨_ : ∀{ℓ}(ℋ : Set ℓ) {{_ : HeytingAlgebra ℋ}} (v : Valuation ℋ) (φ : Φ) → Set ℓ
+  _,_⊨_ ℋ {{ha}} v φ = v ⟦ φ ⟧ ≡ 1' where open HeytingAlgebra ha
+  
+  _⊨_ : ∀{ℓ}(ℋ : Set ℓ) {{_ : HeytingAlgebra ℋ}} (φ : Φ) → Set ℓ
+  ℋ ⊨ φ = ∀ v → ℋ , v ⊨ φ 
+
+  ⊨_ : ∀{ℓ} → Φ → Set (lsuc ℓ)
+  ⊨ φ = ∀ ℋ v {{ha}} → _,_⊨_ ℋ {{ha}} v φ
+
+  Ex1 : ∀ {φ} → ⊨_ {lzero} (φ ⊃ φ)
+  Ex1 {φ} ℋ v {{ha}} with v ⟦ φ ⟧
+  ... | φ' = a⇒a≡1 φ' where open HeytingAlgebra ha
+{-
+  Ex2 : ∀ {φ ψ} → ⊨_ {lzero} (φ ⊃ (ψ ⊃ φ))
+  Ex2 {φ} {ψ} ℋ v {{ha}} with v ⟦ φ ⟧ | v ⟦ ψ ⟧
+  ... | φ' | ψ' = {!!} where open HeytingAlgebra ha
+-}
+  _⊨ᵣ_ : ∀{ℓ} → Context → Φ → Set (lsuc ℓ)
+  Γ ⊨ᵣ φ = ∀ ℋ v ha → (∀ ψ → ψ ∈ Γ → _,_⊨_ ℋ {{ha}} v ψ) → _,_⊨_ ℋ {{ha}} v φ
+
+  postulate
+    Completeness : ∀ Γ φ → Γ ⊢ φ → _⊨ᵣ_ {lzero} Γ φ
+    Soundness : ∀ Γ φ → _⊨ᵣ_ {lzero} Γ φ → Γ ⊢ φ
+  
+record GodelAlgebra {ℓ} (G : Set ℓ) : Set ℓ where
+  field
+    heytingAlgebra : HeytingAlgebra G
+    propGA : ∀ a b → HeytingAlgebra._∪_ heytingAlgebra a b ≡ HeytingAlgebra.1' heytingAlgebra → Either (a ≡ HeytingAlgebra.1' heytingAlgebra) (b ≡ HeytingAlgebra.1' heytingAlgebra)
+
+BAisHA : ∀ {ℓ} {B : Set ℓ} → BooleanAlgebra B → HeytingAlgebra B
+BAisHA ba = record
+              { _∪_ = _∪_
+              ; _∩_ = _∩_
+              ; _⇒_ = λ x y → (─ x) ∪ y
+              ; ─_ = ─_
+              ; 0' = 0'
+              ; 1' = 1'
+              ; ∪-assoc = ∪-assoc
+              ; ∪-comm = ∪-comm
+              ; ∩-assoc = ∩-assoc
+              ; ∩-comm = ∩-comm
+              ; a∪0≡a = a∪0≡a
+              ; a∩1≡a = a∩1≡a
+              ; a⇒a≡1 = -a∪a≡1
+              ; ⇒-dist = λ x y z → rdistr+comm→ldistr _∪_ _∩_ ∪-comm ∪-distr-∩ (─ x) y z
+              ; a∩a⇒b≡a∩b = p1
+              ; b∩a⇒b≡b = p2
+              ; ∩-abs-∪ = ∩-abs-∪
+              ; ∪-abs-∩ = ∪-abs-∩
+              ; ∪-idemp = absorp+id→idemp _∪_ _∩_ 1' ∪-abs-∩ a∩1≡a
+              ; ∩-idemp = absorp+id→idemp _∩_ _∪_ 0' ∩-abs-∪ a∪0≡a
+              ; ─a≡a⇒0 = p3
+              }
+              where
+                open BooleanAlgebra ba
+                p1 :  ∀ a b → (a ∩ ((─ a) ∪ b)) ≡ (a ∩ b)
+                p1 a b rewrite
+                    ∩-comm a ((─ a) ∪ b)
+                  | ∩-distr-∪ a (─ a) b
+                  | -a∩a≡0 a
+                  | ∪-comm 0' (b ∩ a)
+                  | a∪0≡a (b ∩ a)
+                  | ∩-comm b a
+                  = refl
+                p2 : ∀ a b → (b ∩ ((─ a) ∪ b)) ≡ b
+                p2 a b rewrite
+                   ∩-comm b ((─ a) ∪ b)
+                 | ∩-distr-∪ b (─ a) b
+                 | absorp+id→idemp _∩_ _∪_ 0' ∩-abs-∪ a∪0≡a b
+                 | ∩-comm (─ a) b
+                 | ∪-comm (b ∩ (─ a)) b
+                 | ∪-abs-∩ b (─ a)
+                 = refl
+                p3 : ∀ a → (─ a) ≡ ((─ a) ∪ 0')
+                p3 a rewrite a∪0≡a (─ a) = refl

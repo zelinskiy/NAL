@@ -266,3 +266,8 @@ any f = foldr (λ x y → y ∨ f x) ff
 
 and : 𝕃 𝔹 → 𝔹
 and xs = all (λ x → x) xs
+
+shift : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
+shift _ [] = []
+shift 0 xs = xs
+shift (suc n) (x :: xs) = shift n (xs ++ [ x ])

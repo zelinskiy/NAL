@@ -73,7 +73,7 @@ record KripkeFrame : Set₁ where
   transitiveR = proj₂ preorderR
 
 open KripkeFrame
-  
+   
 _,_⊨_ : ∀ (k : KripkeFrame) → W k → Formula → Set
 k , w  ⊨ var x = V k w x
 k , w  ⊨ False  = ⊥

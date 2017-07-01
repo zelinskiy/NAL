@@ -1,6 +1,8 @@
 module NAL.Utils.Function where
 
+open import NAL.Data.Pair
 open import NAL.Utils.Core
+open import NAL.Utils.Dependent
 
 _∘_ : ∀ {ℓ} {A : Set ℓ}{B : A → Set ℓ}{C : {x : A} → B x → Set ℓ}
     → (f : {x : A} → (y : B x) → C y) → (g : (x : A) → B x) → ((x : A) → C (g x))
@@ -42,6 +44,10 @@ LeftComplement ¬_ _∙_ ε = ∀ a → (¬ a) ∙ a ≡ ε
 RightComplement : ∀ {ℓ} {A : Set ℓ} → (A → A) → (A → A → A) → A → Set ℓ
 RightComplement ¬_ _∙_ ε = ∀ a → a ∙ (¬ a) ≡ ε
 
+--TODO : x, y - unique
+LatinSquare : ∀ {ℓ} {A : Set ℓ} → (A → A → A) → Set ℓ
+LatinSquare {ℓ} {A} _∙_ = (a b : A) → Σ {ℓ} {ℓ} ⟪ A , A ⟫ (λ  {⟨ x , y ⟩ →  ⟪ a ∙ x ≡ b , y ∙ a ≡ b ⟫})
+
 rdistr+comm→ldistr : ∀ {ℓ} {A : Set ℓ} → (_*_ _+_ : A → A → A) →
   Commutative _*_ →
   RightDistributive _*_ _+_ →
@@ -82,3 +88,20 @@ absorp+id→idemp : ∀ {ℓ} {A : Set ℓ} →
   RightIdentity _+_ 0' →
   Idempotent _*_
 absorp+id→idemp _*_ _+_ 0' abs rid a rewrite lemma1 _*_ _+_ 0' rid a a | abs a 0' = refl
+
+
+comm+lid→rid : ∀ {ℓ} {A : Set ℓ} →
+  (_+_ : A → A → A) →
+  (0' : A) →
+  Commutative _+_ →
+  LeftIdentity _+_ 0' →
+  RightIdentity _+_ 0'
+comm+lid→rid _+_ 0' comm lid a rewrite comm a 0' | lid a = refl
+
+comm+rid→lid : ∀ {ℓ} {A : Set ℓ} →
+  (_+_ : A → A → A) →
+  (0' : A) →
+  Commutative _+_ →
+  RightIdentity _+_ 0' →
+  LeftIdentity _+_ 0'
+comm+rid→lid _+_ 0' comm rid a rewrite comm 0' a | rid a = refl

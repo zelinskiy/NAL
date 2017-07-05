@@ -43,7 +43,7 @@ newVar x y vs = primStringAppend x "'"
 infixl 100 _[_:=_]
 
 --This is bad, but i cant find any terminating version without de Bruijn indices
-{-# NO_TERMINATION_CHECK #-}
+{-# TERMINATING #-}
 _[_:=_] : Term → String → Term → Term
 var x [ y := N ] with x is y
 ... | tt = N

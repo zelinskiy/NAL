@@ -223,6 +223,9 @@ subtract x zero p = x
 subtract zero (suc y) ()
 subtract (suc x) (suc y) p = subtract x y p
 
+pred : ℕ → ℕ
+pred 0 = 0
+pred (suc n) = n
 
 _∸_ : (x y : ℕ) → ℕ
 x ∸ 0 = x
@@ -265,7 +268,10 @@ sqrt2 zero zero p = refl
 sqrt2 (suc n) zero p = refl
 sqrt2 zero (suc m) ()
 sqrt2 (suc n) (suc m) p rewrite +0 m  | lemma11 p = {!!}
--}
+-}  
 
 
 
+_^_ : ℕ → ℕ → ℕ
+a ^ 0 = 1
+a ^ (suc b) = a * (a ^ b)

@@ -1,9 +1,11 @@
 module NAL.Utils.Function where
 
 open import NAL.Data.Pair
+open import NAL.Data.Triple
 open import NAL.Utils.Core
 open import NAL.Utils.Dependent
 
+infixl 30 _∘_
 _∘_ : ∀ {ℓ} {A : Set ℓ}{B : A → Set ℓ}{C : {x : A} → B x → Set ℓ}
     → (f : {x : A} → (y : B x) → C y) → (g : (x : A) → B x) → ((x : A) → C (g x))
 f ∘ g = λ x → f (g x)
@@ -47,6 +49,18 @@ RightComplement ¬_ _∙_ ε = ∀ a → a ∙ (¬ a) ≡ ε
 --TODO : x, y - unique
 LatinSquare : ∀ {ℓ} {A : Set ℓ} → (A → A → A) → Set ℓ
 LatinSquare {ℓ} {A} _∙_ = (a b : A) → Σ {ℓ} {ℓ} ⟪ A , A ⟫ (λ  {⟨ x , y ⟩ →  ⟪ a ∙ x ≡ b , y ∙ a ≡ b ⟫})
+
+Transitive : ∀ {ℓ ℓ′}{A : Set ℓ} → (A → A → Set ℓ′) → Set (ℓ′ ⊔ ℓ)
+Transitive _≤_ = ∀ {a b c} → a ≤ b → b ≤ c → a ≤ c
+
+Reflexive : ∀ {ℓ ℓ′}{A : Set ℓ} → (A → A → Set ℓ′) → Set (ℓ′ ⊔ ℓ)
+Reflexive _≤_ = ∀ {x} → x ≤ x
+
+Antisymmetric : ∀ {ℓ ℓ′}{A : Set ℓ} → (A → A → Set ℓ′) → Set (ℓ′ ⊔ ℓ)
+Antisymmetric _≤_ = ∀ a b → a ≤ b → b ≤ a → a ≡ b
+
+PartialOrder : ∀ {ℓ ℓ′}{A : Set ℓ} → (A → A → Set ℓ′) → Set (ℓ′ ⊔ ℓ)
+PartialOrder _≤_ = Triple (Transitive _≤_) (Reflexive _≤_) (Antisymmetric _≤_)
 
 rdistr+comm→ldistr : ∀ {ℓ} {A : Set ℓ} → (_*_ _+_ : A → A → A) →
   Commutative _*_ →

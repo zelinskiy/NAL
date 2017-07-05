@@ -5,10 +5,15 @@ open import NAL.Data.List
 open import NAL.Data.ListSet renaming (_∪_ to _∪LS_; _∩_ to _∩LS_;  _─_ to _─LS_)
 open import NAL.Data.Eq hiding (_is_)
 open import NAL.Data.Comparable
-open import NAL.Data.Fin
+open import NAL.Data.Bin
+open import NAL.Data.Pair
+open import NAL.Data.Nats hiding (≤-trans; ≤-refl; even) renaming (_≤_ to _≤ₙ_)
+open import NAL.Data.Triple
 open import NAL.Data.Either
+open import NAL.Data.Maybe
 open import NAL.Data.Bool renaming (¬_ to not𝔹; _∧_ to and𝔹; _∨_ to or𝔹)
 open import NAL.Utils.Core renaming (⊥ to Bot)
+open import NAL.Utils.Function
 
 infixr 20 ¬_
 infixl 15 _∧_ _∨_
@@ -56,12 +61,59 @@ data _⊢_ : Context → Φ → Set where
 
   ∨I₁ : ∀ {Γ φ ψ} → Γ ⊢ φ → Γ ⊢ φ ∨ ψ
   ∨I₂ : ∀ {Γ φ ψ} → Γ ⊢ ψ → Γ ⊢ φ ∨ ψ
-  ∨E : ∀ {Γ φ ψ ρ} → Γ ⊢ φ ∨ ψ → φ :: Γ ⊢ ρ → ψ :: Γ ⊢ ρ → Γ ⊢ ρ
+  ∨E : ∀ {Γ φ ψ ρ} → Γ ⊢ φ ∨ ψ → Γ ⊢ φ ⊃ ρ → Γ ⊢ ψ ⊃ ρ → Γ ⊢ ρ
   
-  FalseE : ∀ {Γ f g} → Γ ⊢ ¬ f → Γ ⊢ f ⊃ g
+  FalseE : ∀ {Γ φ ψ} → Γ ⊢ ¬ φ → Γ ⊢ φ ⊃ ψ
 
 Valuation : ∀ {ℓ} → Set ℓ → Set ℓ
 Valuation A = String → A
+
+
+
+module 𝔹-ExhaustiveValidityChecking where
+
+  checkValidityEx : Φ → Valuation 𝔹 → 𝔹
+  checkValidityEx (var x) v = v x
+  checkValidityEx ⊥ v = ff
+  checkValidityEx (f ⊃ g) v = or𝔹 (not𝔹 (checkValidityEx f v)) (checkValidityEx g v)
+  checkValidityEx (f ∨ g) v = or𝔹 (checkValidityEx f v) (checkValidityEx g v)
+  checkValidityEx (f ∧ g) v = and𝔹 (checkValidityEx f v) (checkValidityEx g v)
+
+  getVariables : Φ → 𝕃 String
+  getVariables f = nub (h f)
+    where
+      h : Φ → 𝕃 String
+      h (var x) = [ x ]
+      h ⊥ = []
+      h (p ⊃ q) = h p ++ h q
+      h (p ∨ q) = h p ++ h q
+      h (p ∧ q) = h p ++ h q
+
+
+  funFromPairs : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁}{B : Set ℓ₂}{{_ : Comparable A}} →  B → 𝕃 ⟪ A , B ⟫ → (A → B)
+  funFromPairs def xs a with lookup xs a
+  ... | Just b = b
+  ... | Nothing = def --This will newer happen though
+
+  fillLeft : ∀ {ℓ} {A : Set ℓ} → A → ℕ → 𝕃 A → 𝕃 A
+  fillLeft e 0 xs = xs
+  fillLeft e (suc n) xs with (suc n) ≤ₙ length xs
+  ... | tt = xs
+  ... | ff = e :: fillLeft e n xs
+
+  getPosVals : Φ → 𝕃 (Valuation 𝔹)
+  getPosVals p = map (funFromPairs ff ∘ zipLists vs) (map btrans (range 0 (pred (2 ^ z))))
+    where
+      vs = getVariables p
+      z = length vs
+      btrans = (fillLeft ff z) ∘ to𝔹 ∘ fromℕ
+
+  isValid : Φ → 𝔹
+  isValid φ = and (map (checkValidityEx φ) (getPosVals φ))
+
+  Exx0 = var "A" ⊃ (var "B" ⊃ var "A")
+  Exx1 = var "A" ⊃ var "B" ⊃ var "C"
+
 
 
 module ⊢-examples where
@@ -300,3 +352,68 @@ BAisHA ba = record
                  = refl
                 p3 : ∀ a → (─ a) ≡ ((─ a) ∪ 0')
                 p3 a rewrite a∪0≡a (─ a) = refl
+
+record KripkeModel (C : Set) : Set₁ where
+  field
+    _≤_ : C → C → Set
+    _⊩_ : C → String → Set
+    ≤-porder : PartialOrder _≤_
+    ⊩-mono : ∀ {c c' p} → c ≤ c' → c ⊩ p → c' ⊩ p
+  ≤-trans : Transitive _≤_
+  ≤-trans = tripleA ≤-porder
+  ≤-refl : Reflexive _≤_
+  ≤-refl = tripleB ≤-porder
+
+module KripkeSemantics where
+
+  _,_⊨_ : ∀{C : Set} → (k : KripkeModel C) → C → Φ → Set
+  k , w  ⊨ var x = w ⊩ x where open KripkeModel k
+  k , w  ⊨ ⊥  = Bot
+  k , w  ⊨ (f ⊃ g) = ∀ {w'} → w ≤ w' → k , w' ⊨ f → k , w' ⊨ g where open KripkeModel k
+  k , w  ⊨ (f ∧ g) = ⟪ (k , w ⊨ f) , (k , w ⊨ g) ⟫
+  k , w  ⊨ (f ∨ g) = Either (k , w ⊨ f) (k , w ⊨ g)
+
+  ⊨-mono : ∀ {C : Set} {k : KripkeModel C} {w₁ w₂ : C} {φ : Φ} →
+         KripkeModel._≤_ k w₁ w₂ →
+         k , w₁ ⊨ φ →
+         k , w₂ ⊨ φ
+  ⊨-mono {k = k}{φ = var x} r p = KripkeModel.⊩-mono k r p
+  ⊨-mono {φ = ⊥} r p = p
+  ⊨-mono {k = k}{φ = a ⊃ b} r p r' p' = p (≤-trans r r') p' where open KripkeModel k
+  ⊨-mono {φ = φ ∨ ψ} r (Left p) = Left (⊨-mono {φ = φ} r p)
+  ⊨-mono {φ = φ ∨ ψ} r (Right p) = Right (⊨-mono {φ = ψ} r p)
+  ⊨-mono {φ = φ ∧ ψ} r (⟨ φ' , ψ' ⟩) = ⟨ ⊨-mono {φ = φ} r φ' ,  ⊨-mono {φ = ψ} r ψ' ⟩
+
+  _,_⊨ᵣ_ : ∀ {C : Set} → (k : KripkeModel C) → C → Context → Set
+  k , w ⊨ᵣ [] = ⊤
+  k , w ⊨ᵣ (f :: Γ) = ⟪ (k , w ⊨ f) , (k , w ⊨ᵣ Γ) ⟫
+  
+  ⊨ᵣ-mono : ∀ {C : Set}{k : KripkeModel C} {Γ : Context} {w₁ w₂ : C} →
+            KripkeModel._≤_ k w₁ w₂ →
+            k , w₁ ⊨ᵣ Γ →
+            k , w₂ ⊨ᵣ Γ
+  ⊨ᵣ-mono {C} {k} {[]} _ _ = ⊤-intro
+  ⊨ᵣ-mono {C} {k} {f :: Γ} r ⟨ u , v ⟩ =
+    ⟨ ⊨-mono {C} {k} {φ = f} r u , ⊨ᵣ-mono {C} {k} {Γ} r v ⟩
+  
+  _⊩_ : Context → Φ → Set₁
+  Γ ⊩ f = ∀ {C : Set}{k : KripkeModel C} {w : C} → k , w ⊨ᵣ Γ → k , w ⊨ f
+{-
+  KripkeSound : ∀ {Γ : Context} {φ : Φ} → Γ ⊢ φ → Γ ⊩ φ
+  KripkeSound Ax = proj₁
+  KripkeSound (Weak p) g = KripkeSound p (proj₂ g)
+  KripkeSound (Sub p₁) = {!!}
+  KripkeSound (Shift p) = {!!}
+  KripkeSound (⊃I p) g r u =  KripkeSound p ⟨ u , ⊨ᵣ-mono r g ⟩
+  KripkeSound (⊃E p q) {C} {k} g = (KripkeSound p g) (KripkeModel.≤-refl k) (KripkeSound q g)
+  KripkeSound (∧I p q) h = ⟨ KripkeSound p h , KripkeSound q h ⟩
+  KripkeSound (∧E₁ p) h = proj₁ (KripkeSound p h)
+  KripkeSound (∧E₂ p) h = proj₂ (KripkeSound p h)
+  KripkeSound (∨I₁ p) {C} {k} {w} g = Left (KripkeSound p g)
+  KripkeSound (∨I₂ p) {C} {k} {w} g = Right (KripkeSound p g)
+  KripkeSound (∨E p q h) {C} {k} d with KripkeSound p d
+  ... | Left x = (KripkeSound q d) (KripkeModel.≤-refl k) x
+  ... | Right x = (KripkeSound h d) (KripkeModel.≤-refl k) x
+  KripkeSound (FalseE p) q r h = {!!}
+-}    
+                      

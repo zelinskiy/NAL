@@ -12,7 +12,7 @@ open import NAL.Data.Maybe
 open import NAL.Algebra.Functor
 
 infixl 80 _$_
-infixr 50 ƛ_
+infixr 50 ƛ_ 
 
 -- ??? n of reductions
 --- normalization (Maybe nf)
@@ -24,7 +24,7 @@ infixr 50 ƛ_
 data Term : Set where
   var : ℕ → Term
   _$_ : Term → Term → Term
-  ƛ_ : Term → Term --Caution here!
+  ƛ_ : Term → Term
 
 instance
   EqTerm : Eq Term

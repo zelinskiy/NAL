@@ -1,6 +1,8 @@
 module NAL.Data.Comparable where
 
 open import NAL.Data.List
+open import NAL.Data.Pair
+open import NAL.Data.Maybe
 open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Utils.Core
@@ -74,3 +76,7 @@ instance
       cmp (x :: xs) (y :: ys) with compare x y
       ... | EQ = cmp xs ys
       ... | o = o
+
+lookup : ∀ {ℓ₁ ℓ₂}{A : Set ℓ₁}{B : Set ℓ₂} {{_ : Comparable A}} → 𝕃 ⟪ A , B ⟫ → A → Maybe B
+lookup [] x = Nothing
+lookup (⟨ a , b ⟩ :: r) x = if a is x then Just b else lookup r x

@@ -6,6 +6,7 @@ open import NAL.Data.Bool
 open import NAL.Data.Pair
 open import NAL.Data.Eq
 
+
 open import NAL.Utils.Function
 
 
@@ -238,15 +239,18 @@ _!_ : {A : Set}(xs : 𝕃 A)(n : ℕ) -> Lookup xs n
 ∈-relax-left (_ :: xs) p = tl (∈-relax-left xs p)
 
 
-nub : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → 𝕃 A → 𝕃 A
-nub xs = nub0 xs (length xs)
+
+
+nubBy : ∀{ℓ}{A : Set ℓ} → (A → A → 𝔹) → 𝕃 A → 𝕃 A
+nubBy p xs = nub0 p xs (length xs)
   where
-    nub0 : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → 𝕃 A → ℕ → 𝕃 A
-    nub0 (x :: xs) (suc fuel) = x :: nub0 (filter (λ y → ¬ (x is y)) xs) fuel
-    nub0 [] (suc fuel) = []
-    nub0 _ 0 = []
+    nub0 : ∀{ℓ}{A : Set ℓ}→ (A → A → 𝔹) → 𝕃 A → ℕ → 𝕃 A
+    nub0 p (x :: xs) (suc fuel) = x :: nub0 p (filter (λ y → ¬ (p x y)) xs) fuel
+    nub0 p [] (suc fuel) = []
+    nub0 p _ 0 = []
 
-
+nub : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → 𝕃 A → 𝕃 A
+nub xs = nubBy _is_ xs
 
 range : ℕ → ℕ → 𝕃 ℕ
 range x y = reverse (y :: h x y)
@@ -271,3 +275,15 @@ shift : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
 shift _ [] = []
 shift 0 xs = xs
 shift (suc n) (x :: xs) = shift n (xs ++ [ x ])
+
+
+comb : ∀{ℓ}{A : Set ℓ} → ℕ -> 𝕃 A → 𝕃 (𝕃 A)
+comb 0 _      = [] :: []
+comb _ []     = []
+comb (suc m) (x :: xs) = map (x ::_) (comb m xs) ++ comb (suc m) xs
+
+_×_ : ∀{ℓ₁ ℓ₂}{A : Set ℓ₁}{B : Set ℓ₂} → 𝕃 A → 𝕃 B → 𝕃 ⟪ A , B ⟫
+[] × _ = []
+_ × [] = []
+(x :: xs) × ys = map (⟨_,_⟩ x) ys ++ (xs × ys)
+

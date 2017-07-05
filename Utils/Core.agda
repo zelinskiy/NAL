@@ -30,6 +30,7 @@ inspect x = x with≡ refl
 
 data ⊥ : Set where
 
+
 ⊥-elim : ∀ {w} {Whatever : Set w} → ⊥ → Whatever
 ⊥-elim ()
 

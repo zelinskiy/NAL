@@ -40,6 +40,9 @@ mutual
      _$_ : Λ → Λ → Λ
      ƛ_!_ : Λ → Λ → Λ
 
+typeof :  Binding → Π
+typeof (_ ∷ τ) = τ
+
 Context = 𝕃 Binding
 
 dom : Context → 𝕃 String
@@ -50,18 +53,20 @@ dom (_ :: bs) = dom bs
 ran : Context → 𝕃 Π
 ran Γ = nub (map (λ { (x ∷ τ) → τ}) Γ)
 
-swapAfter : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
-swapAfter 0 (x :: y :: xs) = (y :: x :: xs)
-swapAfter (suc n) (x :: xs) = x :: swapAfter n xs
-swapAfter _ [] = []
-swapAfter 0 xs = xs
+exchange : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
+exchange 0 (x :: y :: xs) = (y :: x :: xs)
+exchange (suc n) (x :: xs) = x :: exchange n xs
+exchange _ [] = []
+exchange 0 xs = xs
 
 data _⊢_∷_ : Context → Λ → Π → Set where
-  Ax : ∀ {Γ x τ} → (x ∷ τ) :: Γ ⊢ x ∷ τ -- x ∉ dom Γ
+  Ax : ∀ {Γ x τ} → (var x ∷ τ) :: Γ ⊢ var x ∷ τ -- x ∉ dom Γ
   Abs : ∀ {Γ x τ M σ} → (x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
   App : ∀ {Γ τ M σ N} → Γ ⊢ M ∷ σ ⇒ τ → Γ ⊢ N ∷ σ → Γ ⊢ (M $ N) ∷ τ
-  Swap : ∀ {Γ x τ} → (n : ℕ) → swapAfter n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
+  Exchange : ∀ {Γ x τ} → (n : ℕ) → exchange n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
   
+
+
 
 STLC = mkTriple Λ Π _⊢_∷_
 
@@ -69,7 +74,7 @@ Ex1 : [] ⊢ ƛ var "x" ! var "x" ∷ tvar "σ" ⇒ tvar "σ"
 Ex1 = Abs Ax
 
 Ex2 : [] ⊢ ƛ var "x" ! ƛ var "y" ! var "x" ∷ tvar "σ" ⇒ tvar "τ" ⇒ tvar "σ"
-Ex2 = Abs (Abs (Swap 0 Ax))
+Ex2 = Abs (Abs (Exchange 0 Ax))
 
 Ex3 : [] ⊢ ƛ var "x" ! ƛ var "y" ! ƛ var "z" ! var "x" $ var "z" $ (var "y" $ var "z")
   ∷ (tvar "σ" ⇒ tvar "τ" ⇒ tvar "ρ") ⇒ (tvar "σ" ⇒ tvar "τ") ⇒ tvar "σ" ⇒ tvar "ρ"
@@ -77,12 +82,12 @@ Ex3 = Abs(
   Abs(Abs(
     App{σ = tvar "τ"} (
       App{σ =  tvar "σ"} (
-        Swap 1 (
-          Swap 0
+        Exchange 1 (
+          Exchange 0
             Ax))
         Ax)
      (App{σ =  tvar "σ"}
-       (Swap 0 Ax)
+       (Exchange 0 Ax)
        Ax))))
 
 FV' : Λ → ListSet String
@@ -106,6 +111,27 @@ postulate
     Σ Π (λ τ → ⟪ (Γ ⊢ M ∷ τ ⇒ σ) , (Γ ⊢ N ∷ τ) ⟫)
   GenerationLemma3 : ∀ {Γ M x σ} → Γ ⊢ (ƛ x ! M) ∷ σ →
     Σ ⟪ Π , Π ⟫ (λ {⟨ τ , ρ ⟩ → ⟪ ((x ∷ τ) :: Γ ⊢ M ∷ ρ) , (σ ≡ τ ⇒ ρ) ⟫})
+
+doubleEx : ∀{ℓ}{A : Set ℓ}{n : ℕ}{xs : 𝕃 A} → (exchange n (exchange n xs)) ≡ xs
+doubleEx {n = zero} {[]} = refl
+doubleEx {n = zero} {x :: y :: xs} = refl
+doubleEx {n = zero} {x :: []} = refl
+doubleEx {n = suc n} {[]} = refl
+doubleEx {n = suc n} {x :: xs} rewrite doubleEx {n = n} {xs} = refl
+
+doubleExchange : ∀{Γ x τ n} → Γ ⊢ x ∷ τ → exchange n (exchange n Γ) ⊢ x ∷ τ
+doubleExchange {Γ} {x} {τ} {n} p rewrite doubleEx {n = n} {xs = Γ} = p
+
+doubleExchangeR : ∀{Γ x τ n} → exchange n (exchange n Γ) ⊢ x ∷ τ →  Γ ⊢ x ∷ τ
+doubleExchangeR {Γ} {x} {τ} {n} p rewrite doubleEx {n = n} {xs = Γ} = p
+
+ExchangeRev : ∀ {Γ x τ n} → Γ ⊢ x ∷ τ → exchange n Γ ⊢ x ∷ τ
+ExchangeRev {Γ} {x} {τ} {n} p = Exchange n (doubleExchange {n = n} p)
+{-
+GenerationLemma11 : ∀ {Γ x σ} → Γ ⊢ var x ∷ σ → (var x ∷ σ) ∈ Γ
+GenerationLemma11 Ax = hd
+GenerationLemma11 {Γ} {x} {σ} (Exchange n p) = {!!}
+-}
 
 newVar : String → String → 𝕃 String → String
 newVar x y vs = primStringAppend x "'" 
@@ -164,3 +190,11 @@ postulate
   SubjectExpansion : ∀ {Γ M N σ} → Γ ⊢ M ∷ σ → M ↠β N → Γ ⊢ N ∷ σ
   ChurchRosser : ∀{Γ M N N′ σ} → Γ ⊢ M ∷ σ → M ↠β N → M ↠β N′ →
     Σ Λ (λ L → ⟪ ⟪ N ↠β L , N′ ↠β L ⟫ , Γ ⊢ L ∷ σ ⟫)
+
+l1 : ∀{M N} → _→β_ M N → reduce M ≡ N
+l1 {M} {N} p = p
+
+l2 : ∀{x M N} → reduce ((ƛ var x ! M) $ N) ≡ M [ x := N ]
+l2 = refl
+
+

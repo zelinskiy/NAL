@@ -280,7 +280,7 @@ shift (suc n) (x :: xs) = shift n (xs ++ [ x ])
 comb : ∀{ℓ}{A : Set ℓ} → ℕ -> 𝕃 A → 𝕃 (𝕃 A)
 comb 0 _      = [] :: []
 comb _ []     = []
-comb (suc m) (x :: xs) = map (x ::_) (comb m xs) ++ comb (suc m) xs
+comb (suc m) (x :: xs) = map (λ ys → x :: ys) (comb m xs) ++ comb (suc m) xs
 
 _×_ : ∀{ℓ₁ ℓ₂}{A : Set ℓ₁}{B : Set ℓ₂} → 𝕃 A → 𝕃 B → 𝕃 ⟪ A , B ⟫
 [] × _ = []

@@ -112,3 +112,15 @@ _ implies _ = tt
 
 𝔹-contra : ff ≡ tt → ∀ {P : Set} → P
 𝔹-contra ()
+
+a∧b→a : ∀{a b} → (a ∧ b) ≡ tt → a ≡ tt
+a∧b→a {tt} {tt} p = refl
+a∧b→a {tt} {ff} p = refl
+a∧b→a {ff} {tt} ()
+a∧b→a {ff} {ff} ()
+
+
+a∧b→b : ∀{a b} → (a ∧ b) ≡ tt → b ≡ tt
+a∧b→b {_} {tt} p = refl
+a∧b→b {tt} {ff} ()
+a∧b→b {ff} {ff} ()

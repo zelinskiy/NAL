@@ -63,15 +63,22 @@ data _⊢_∷_ : Context → Λ → Π → Set where
   Ax : ∀ {Γ x τ} → (var x ∷ τ) :: Γ ⊢ var x ∷ τ -- x ∉ dom Γ
   Abs : ∀ {Γ x τ M σ} → (x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
   App : ∀ {Γ τ M σ N} → Γ ⊢ M ∷ σ ⇒ τ → Γ ⊢ N ∷ σ → Γ ⊢ (M $ N) ∷ τ
-  Exchange : ∀ {Γ x τ} → (n : ℕ) → exchange n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
-  
+
+postulate Exchange : ∀ {Γ x τ} → (n : ℕ) → exchange n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
+postulate
+  Contract : ∀ {Γ x τ q ψ} → (x ∷ τ) :: (x ∷ τ) :: Γ ⊢ q ∷ ψ → (x ∷ τ) :: Γ ⊢ q ∷ ψ
 
 
+height : ∀{Γ M τ} → Γ ⊢ M ∷ τ → ℕ
+height Ax = 1
+height (Abs p) = suc (height p)
+height (App p q) = suc (maxₙ (height p) (height q))
 
 STLC = mkTriple Λ Π _⊢_∷_
 
 Ex1 : [] ⊢ ƛ var "x" ! var "x" ∷ tvar "σ" ⇒ tvar "σ"
 Ex1 = Abs Ax
+
 
 Ex2 : [] ⊢ ƛ var "x" ! ƛ var "y" ! var "x" ∷ tvar "σ" ⇒ tvar "τ" ⇒ tvar "σ"
 Ex2 = Abs (Abs (Exchange 0 Ax))
@@ -105,13 +112,6 @@ postulate
   FVlemma2 : ∀{M Γ σ} → Γ ⊢ M ∷ σ → FV M ⊆ dom Γ
   FVlemma3 : ∀{Γ Γ′ M σ} → Γ ⊢ M ∷ σ → dom Γ′ ≡ FV M → Γ′ ⊆ Γ → Γ′ ⊢ M ∷ σ
 
-postulate
-  GenerationLemma1 : ∀ {Γ x σ} → Γ ⊢ x ∷ σ → (x ∷ σ) ∈ Γ
-  GenerationLemma2 : ∀{Γ M N σ} → Γ ⊢ M $ N ∷ σ →
-    Σ Π (λ τ → ⟪ (Γ ⊢ M ∷ τ ⇒ σ) , (Γ ⊢ N ∷ τ) ⟫)
-  GenerationLemma3 : ∀ {Γ M x σ} → Γ ⊢ (ƛ x ! M) ∷ σ →
-    Σ ⟪ Π , Π ⟫ (λ {⟨ τ , ρ ⟩ → ⟪ ((x ∷ τ) :: Γ ⊢ M ∷ ρ) , (σ ≡ τ ⇒ ρ) ⟫})
-
 doubleEx : ∀{ℓ}{A : Set ℓ}{n : ℕ}{xs : 𝕃 A} → (exchange n (exchange n xs)) ≡ xs
 doubleEx {n = zero} {[]} = refl
 doubleEx {n = zero} {x :: y :: xs} = refl
@@ -127,11 +127,17 @@ doubleExchangeR {Γ} {x} {τ} {n} p rewrite doubleEx {n = n} {xs = Γ} = p
 
 ExchangeRev : ∀ {Γ x τ n} → Γ ⊢ x ∷ τ → exchange n Γ ⊢ x ∷ τ
 ExchangeRev {Γ} {x} {τ} {n} p = Exchange n (doubleExchange {n = n} p)
-{-
-GenerationLemma11 : ∀ {Γ x σ} → Γ ⊢ var x ∷ σ → (var x ∷ σ) ∈ Γ
-GenerationLemma11 Ax = hd
-GenerationLemma11 {Γ} {x} {σ} (Exchange n p) = {!!}
--}
+
+GenerationLemma1 : ∀ {Γ x σ} → Γ ⊢ var x ∷ σ → (var x ∷ σ) ∈ Γ
+GenerationLemma1 Ax = hd
+
+GenerationLemma2 : ∀{Γ M N σ} → Γ ⊢ M $ N ∷ σ →
+    Σ Π (λ τ → ⟪ (Γ ⊢ M ∷ τ ⇒ σ) , (Γ ⊢ N ∷ τ) ⟫)
+GenerationLemma2 (App {σ = σ'} p q) = Σ σ' , ⟨ p , q ⟩
+
+GenerationLemma3 : ∀ {Γ M x σ} → Γ ⊢ (ƛ x ! M) ∷ σ →
+  Σ ⟪ Π , Π ⟫ (λ {⟨ τ , ρ ⟩ → ⟪ ((x ∷ τ) :: Γ ⊢ M ∷ ρ) , (σ ≡ τ ⇒ ρ) ⟫})
+GenerationLemma3  (Abs {τ = ρ}{σ = τ} p) = Σ ⟨ τ , ρ ⟩ , ⟨ p , refl ⟩
 
 newVar : String → String → 𝕃 String → String
 newVar x y vs = primStringAppend x "'" 
@@ -160,13 +166,48 @@ _[_≔_] : Π → String → Π → Π
 (σ₁ ⇒ σ₂) [ α ≔ τ ] = (σ₁ [ α ≔ τ ]) ⇒ (σ₂ [ α ≔ τ ])
 
 _[_≔ᵣ_] : Context → String → Π → Context
-((x ∷ (tvar σ)) :: Γ) [ α ≔ᵣ τ ] = (if σ is α then x ∷ τ else (x ∷ (tvar σ))) :: (Γ [ α ≔ᵣ τ ])
-(b :: Γ) [ α ≔ᵣ τ ] = b :: (Γ [ α ≔ᵣ τ ])
+((x ∷ σ) :: Γ) [ α ≔ᵣ τ ] = (x ∷ (σ [ α ≔ τ ])) :: (Γ [ α ≔ᵣ τ ])
 [] [ _ ≔ᵣ _ ] = []
 
+eq=>≡ : ∀{σ τ : Π} → σ is τ ≡ tt → σ ≡ τ
+eq=>≡ {tvar x} {tvar y} p with inspect (x is y)
+eq=>≡ {tvar x} {tvar y} p | tt with≡ q rewrite Strings≡ {x} {y} q = refl
+eq=>≡ {tvar x} {tvar y} p | ff with≡ q rewrite q = 𝔹-contra p
+eq=>≡ {tvar x} {τ ⇒ τ₁} ()
+eq=>≡ {σ ⇒ σ₁} {tvar x} ()
+eq=>≡ {σ ⇒ σ'} {τ ⇒ τ'} p rewrite eq=>≡ {σ} {τ} (a∧b→a p) | eq=>≡ {σ'} {τ'} (a∧b→b p) = refl 
+
+
 postulate
-  SubLemma1 : ∀{Γ M σ α τ} → Γ ⊢ M ∷ σ → Γ [ α ≔ᵣ τ ] ⊢ M ∷ (σ [ α ≔ τ ])
   SubLemma2 : ∀{Γ M N σ τ x} → (var x ∷ τ) :: Γ ⊢ M ∷ σ → Γ ⊢ N ∷ τ → Γ ⊢ (_[_:=_] M x N) ∷ σ
+
+SubLemma1 : ∀{Γ M σ α τ} → Γ ⊢ M ∷ σ → Γ [ α ≔ᵣ τ ] ⊢ M ∷ (σ [ α ≔ τ ])
+SubLemma1 {α = α} (Ax {τ = σ}) with σ
+SubLemma1 {α = α} (Ax {τ = σ}) | tvar y with primStringEquality α y
+SubLemma1 {α = α} (Ax {τ = σ}) | tvar y | tt = Ax
+SubLemma1 {α = α} (Ax {τ = σ}) | tvar y | ff = Ax
+SubLemma1 {α = α} (Ax {τ = σ}) | ψ ⇒ φ = Ax
+SubLemma1 (Abs p) = Abs (SubLemma1 p)
+SubLemma1 (App p q) = App (SubLemma1 p) (SubLemma1 q)
+
+postulate Γ-consistent : ∀ {Γ M σ τ} → (M ∷ σ) ∈ Γ → (M ∷ τ) ∈ Γ → σ is τ ≡ ff → ⊥
+
+{-
+SubLemma22 : ∀{Γ M N σ τ x} →
+  (var x ∷ τ) :: Γ ⊢ M ∷ σ →
+  Γ ⊢ N ∷ τ →
+  Γ ⊢ (_[_:=_] M x N) ∷ σ
+SubLemma22 .{Γ} .{var x} {N} .{τ} .{τ} .{x} (Ax {Γ} {x} {τ}) b rewrite primStringEqualityRefl {x} = b
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b with inspect (x is y) 
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | tt with≡ q with inspect (τ is σ)
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | tt with≡ q | tt with≡ h rewrite q | Strings≡ {x} {y} q | eq=>≡ {τ} {σ} h = Abs (Contract p)
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | tt with≡ q | ff with≡ h rewrite q | (Strings≡ {x} {y} q) = ⊥-elim (Γ-consistent {(var y ∷ σ) :: (var y ∷ τ) :: Γ} (tl hd) hd h)
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | ff with≡ q rewrite q with ¬ (x ∈? FV' N) ∨ ¬ (x ∈? FV' M)
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | ff with≡ q | tt = Abs {!!}
+SubLemma22 {Γ} {ƛ (var y) ! M} {N} {σ ⇒ σ'} {τ} {x} (Abs .{(var x ∷ τ) :: Γ} .{var y} .{σ'} .{M} .{σ} p) b | ff with≡ q | ff = {!!}
+SubLemma22 {Γ} {ƛ wtf ! M} {N} {σ ⇒ σ'} {τ} {y} (Abs .{(var y ∷ τ) :: Γ} .{wtf} .{σ'} .{M} .{σ} p) b = {!!}
+SubLemma22 (App p q) b = App (SubLemma22 p b) (SubLemma22 q b)
+-}
 
 reduce : Λ → Λ
 reduce ((ƛ var x ! M) $ N) = M [ x := N ]

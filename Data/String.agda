@@ -6,6 +6,8 @@ open import NAL.Data.Bool
 open import NAL.Data.Eq
 open import NAL.Data.Comparable
 
+open import NAL.Utils.Core
+
 postulate String : Set
 {-# BUILTIN STRING String #-}
 
@@ -21,6 +23,10 @@ instance
   EqString : Eq String
   EqString = record {_is_ = primStringEquality}
 
+postulate
+  Strings≡ : ∀{x y} → primStringEquality x y ≡ tt → x ≡ y
+  primStringEqualityRefl : ∀{x} → primStringEquality x x ≡ tt
+  primStringEqualitySym : ∀{x y} → primStringEquality x y ≡ tt → primStringEquality y x ≡ tt
 
 instance
   ComparableString : Comparable String

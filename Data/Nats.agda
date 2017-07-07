@@ -275,3 +275,6 @@ sqrt2 (suc n) (suc m) p rewrite +0 m  | lemma11 p = {!!}
 _^_ : ℕ → ℕ → ℕ
 a ^ 0 = 1
 a ^ (suc b) = a * (a ^ b)
+
+maxₙ : ℕ → ℕ → ℕ
+maxₙ a b = if a ≤ b then b else a

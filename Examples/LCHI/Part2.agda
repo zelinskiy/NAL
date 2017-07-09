@@ -10,6 +10,7 @@ open import NAL.Data.Pair
 open import NAL.Data.Nats hiding (≤-trans; ≤-refl; even) renaming (_≤_ to _≤ₙ_)
 open import NAL.Data.Triple
 open import NAL.Data.Either
+open import NAL.Data.Show
 open import NAL.Data.Maybe
 open import NAL.Data.Bool renaming (¬_ to not𝔹; _∧_ to and𝔹; _∨_ to or𝔹)
 open import NAL.Utils.Core renaming (⊥ to Bot)
@@ -26,6 +27,18 @@ data Φ : Set where
   _⊃_ : Φ → Φ → Φ
   _∨_ : Φ → Φ → Φ
   _∧_ : Φ → Φ → Φ
+
+instance
+  showΦ : Show Φ
+  showΦ = record {show = helper}
+    where
+      helper : Φ → String
+      helper (var x) = x
+      helper (⊥) = "_|_"
+      helper (φ ⊃ ψ) = primStringAppend (primStringAppend (helper ψ) " -> ") (helper ψ)
+      helper (φ ∨ ψ) = primStringAppend (primStringAppend (helper ψ) " ‌\\/ ") (helper ψ)
+      helper (φ ∧ ψ) = primStringAppend (primStringAppend (helper ψ) " /\\ ") (helper ψ)
+
 
 ¬_ : Φ → Φ
 ¬ a = a ⊃ ⊥
@@ -47,11 +60,7 @@ var y [ x := ψ ] with y is x
 
 infix 5 _⊢_
 data _⊢_ : Context → Φ → Set where
-  Ax : ∀ {Γ φ} → φ :: Γ ⊢ φ
-  Weak : ∀ {Γ φ ψ} → Γ ⊢ φ → ψ :: Γ ⊢ φ
-  Sub : ∀ {Γ φ ψ p} → Γ ⊢ φ → map (_[ p := ψ ]) Γ ⊢ φ [ p := ψ ]
-  Shift : ∀ {n Γ φ} → Γ ⊢ φ → shift n Γ ⊢ φ
-
+  Ax : ∀ {Γ φ} → φ :: Γ ⊢ φ 
   ⊃I : ∀ {Γ φ ψ} → φ :: Γ ⊢ ψ → Γ ⊢ φ ⊃ ψ
   ⊃E : ∀ {Γ φ ψ} → Γ ⊢ φ ⊃ ψ → Γ ⊢ φ → Γ ⊢ ψ
   
@@ -68,6 +77,10 @@ data _⊢_ : Context → Φ → Set where
 Valuation : ∀ {ℓ} → Set ℓ → Set ℓ
 Valuation A = String → A
 
+postulate
+  Weak : ∀ {Γ φ ψ} → Γ ⊢ φ → ψ :: Γ ⊢ φ
+  Sub : ∀ {Γ φ ψ p} → Γ ⊢ φ → map (_[ p := ψ ]) Γ ⊢ φ [ p := ψ ]
+  Exchange : ∀ {n Γ φ} → Γ ⊢ φ → exchange n Γ ⊢ φ
 
 
 module 𝔹-ExhaustiveValidityChecking where
@@ -116,6 +129,7 @@ module 𝔹-ExhaustiveValidityChecking where
 
 
 
+
 module ⊢-examples where
   Ex1 : ∀ {φ} → [] ⊢ φ ⊃ φ
   Ex1 {φ} = ⊃I Ax
@@ -124,12 +138,16 @@ module ⊢-examples where
   Ex2 {φ} {ψ} = ⊃I (⊃I (Weak Ax))
 
   Ex3 : ∀{φ ψ ν} → [] ⊢ (φ ⊃ (ψ ⊃ ν)) ⊃ (φ ⊃ ψ) ⊃ (φ ⊃ ν)
-  Ex3 {φ} {ψ} {ν} = ⊃I (⊃I (⊃I (⊃E {Γ}{ψ}{ν} (⊃E{Γ}{φ}{ψ ⊃ ν}(Shift {3} {Γ} (Weak (Weak Ax))) Ax) (⊃E (Weak Ax) Ax))))
+  Ex3 {φ} {ψ} {ν} = ⊃I (⊃I (⊃I (⊃E {Γ}{ψ}{ν} (⊃E{Γ}{φ}{ψ ⊃ ν}(Exchange {3} {Γ} (Weak (Weak Ax))) Ax) (⊃E (Weak Ax) Ax))))
     where Γ = φ :: (φ ⊃ ψ) :: (φ ⊃ (ψ ⊃ ν)) :: []
   {-
-  Ex4 : ∀{φ ψ} → [] ⊢ (φ ⊃ ψ) ⊃ (¬ ψ ⊃ ¬ φ)
-  Ex4 {φ} {ψ} = ⊃I (⊃I (⊃I {!!}))
+  Ex5 : ∀ {φ ψ} → φ :: (φ ⊃ ψ) :: [] ⊢ ψ
+  Ex5 = {!!}
+
+  Ex4 : ∀{φ ψ} → (((φ ⊃ ψ) ⊃ φ) ⊃ φ) :: [] ⊢ φ ∨ ¬ φ 
+  Ex4 {φ} {ψ} = ∨I₂ (⊃I {!!})
   -}
+  
 
 
 --𝔹 = Fin 2
@@ -415,5 +433,37 @@ module KripkeSemantics where
   ... | Left x = (KripkeSound q d) (KripkeModel.≤-refl k) x
   ... | Right x = (KripkeSound h d) (KripkeModel.≤-refl k) x
   KripkeSound (FalseE p) q r h = {!!}
--}    
-                      
+-}
+
+module IPC where
+
+  data IPC : Set where
+    var' : String → IPC
+    _⊃'_ : IPC → IPC → IPC
+
+  data _⊢'_ : 𝕃 IPC → IPC → Set where
+    Ax' : ∀ {Γ φ} → φ :: Γ ⊢' φ 
+    ⊃I' : ∀ {Γ φ ψ} → φ :: Γ ⊢' ψ → Γ ⊢' φ ⊃' ψ
+    ⊃E' : ∀ {Γ φ ψ} → Γ ⊢' φ ⊃' ψ → Γ ⊢' φ → Γ ⊢' ψ
+
+  infix 6 _⊢'_
+  infixr 10 _⊃'_
+
+  embed : IPC → Φ
+  embed (var' x) = var x
+  embed (φ ⊃' ψ) = (embed φ) ⊃ (embed ψ)
+
+  instance
+    showIPC : Show IPC
+    showIPC = record {show = helper}
+      where
+        helper : IPC → String
+        helper (var' x) = x
+        helper (φ ⊃' ψ) = primStringAppend (primStringAppend (helper ψ) " -> ") (helper ψ)
+
+  open KripkeSemantics
+
+  IPCcomp : ∀ {Γ φ} → Γ ⊢' φ → map embed Γ ⊩ embed φ
+  IPCcomp Ax' = proj₁
+  IPCcomp (⊃I' ip) g r u = IPCcomp ip ⟨ u , ⊨ᵣ-mono r g ⟩
+  IPCcomp (⊃E' ip iq) {C} {k} g = (IPCcomp ip g) (KripkeModel.≤-refl k) (IPCcomp iq g)

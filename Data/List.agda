@@ -287,3 +287,17 @@ _×_ : ∀{ℓ₁ ℓ₂}{A : Set ℓ₁}{B : Set ℓ₂} → 𝕃 A → 𝕃 B 
 _ × [] = []
 (x :: xs) × ys = map (⟨_,_⟩ x) ys ++ (xs × ys)
 
+exchange : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
+exchange 0 (x :: y :: xs) = (y :: x :: xs)
+exchange (suc n) (x :: xs) = x :: exchange n xs
+exchange _ [] = []
+exchange 0 xs = xs
+
+dropLast : ∀{ℓ} {A : Set ℓ} → 𝕃 A → 𝕃 A
+dropLast [] = []
+dropLast (x :: []) = []
+dropLast (x :: xs) = x :: dropLast xs
+
+dropFirst : ∀{ℓ} {A : Set ℓ} → 𝕃 A → 𝕃 A
+dropFirst [] = []
+dropFirst (x :: xs) = xs

@@ -12,10 +12,10 @@ open import NAL.Data.String
 open import NAL.Utils.Core
 open import NAL.Utils.Dependent hiding (Π)
 
-infixl 10 _∷_
+infix 10 _∷_
 infixr 50 ƛ_!_
 infixl 80 _$_
-infixl 5 _⊢_∷_
+infix 5 _⊢_∷_
 infixr 30 _⇒_
 
 data Π : Set where
@@ -51,17 +51,13 @@ dom (((var x) ∷ t) :: bs) = x :: dom bs
 dom (_ :: bs) = dom bs
 
 ran : Context → 𝕃 Π
-ran Γ = nub (map (λ { (x ∷ τ) → τ}) Γ)
+ran Γ = map (λ { (x ∷ τ) → τ}) Γ
 
-exchange : ∀{ℓ}{A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
-exchange 0 (x :: y :: xs) = (y :: x :: xs)
-exchange (suc n) (x :: xs) = x :: exchange n xs
-exchange _ [] = []
-exchange 0 xs = xs
+
 
 data _⊢_∷_ : Context → Λ → Π → Set where
   Ax : ∀ {Γ x τ} → (var x ∷ τ) :: Γ ⊢ var x ∷ τ -- x ∉ dom Γ
-  Abs : ∀ {Γ x τ M σ} → (x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
+  Abs : ∀ {Γ x τ M σ} → (var x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ var x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
   App : ∀ {Γ τ M σ N} → Γ ⊢ M ∷ σ ⇒ τ → Γ ⊢ N ∷ σ → Γ ⊢ (M $ N) ∷ τ
 
 postulate Exchange : ∀ {Γ x τ} → (n : ℕ) → exchange n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
@@ -139,8 +135,8 @@ GenerationLemma3 : ∀ {Γ M x σ} → Γ ⊢ (ƛ x ! M) ∷ σ →
   Σ ⟪ Π , Π ⟫ (λ {⟨ τ , ρ ⟩ → ⟪ ((x ∷ τ) :: Γ ⊢ M ∷ ρ) , (σ ≡ τ ⇒ ρ) ⟫})
 GenerationLemma3  (Abs {τ = ρ}{σ = τ} p) = Σ ⟨ τ , ρ ⟩ , ⟨ p , refl ⟩
 
-newVar : String → String → 𝕃 String → String
-newVar x y vs = primStringAppend x "'" 
+newVar : String → String
+newVar x = primStringAppend x "'" 
 
 infixl 100 _[_:=_]
 {-# TERMINATING #-}
@@ -155,7 +151,7 @@ var x [ y := N ] with x is y
 (ƛ (var y) ! P)[ x := N ] | ff | tt = (ƛ var y ! P [ x := N ])
 (ƛ (var y) ! P)[ x := N ] | ff | ff with x ∈? FV' N ∧ y ∈? FV' P
 (ƛ (var y) ! P)[ x := N ] | ff | ff | tt = ƛ var y ! P [ y := var z ] [ x := N ]
-  where z = newVar y x [] --Problematic call here
+  where z = newVar y --Problematic call here
 (ƛ (var y) ! P)[ x := N ] | ff | ff | ff = (ƛ var y ! P)
 (ƛ wtf ! P)[ x := N ] = ƛ wtf ! P [ x := N ]
 

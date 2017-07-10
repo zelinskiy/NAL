@@ -57,10 +57,28 @@ CurryHoward2 (⊃E p q) = Σ π₁ p' $ π₁ q' , App (π₂ p') (π₂ q')
     p' = CurryHoward2 p
     q' = CurryHoward2 q
  
+
+lemma1 :  ∀ {Γ φ} → Γ ⊢ fromΠ (toΠ φ) → Γ ⊢ φ
+lemma1 {Γ} {φ} p rewrite fromToΠ {φ} = p
+
 {-
-nbe : ∀ {Γ φ} → Γ ⊢ φ →  ∣ mkΔ Γ ∣ ⊢ φ
-nbe {Γ} {φ} p rewrite  fromToΠ {φ} = CurryHoward1 {mkΔ Γ} {var (primStringAppend "x_" (showΦ φ))} {toΠ φ} {!!}
+IDEA :
+Take proof
+Make typed lambda term from it
+Normalize term
+Make (normalized) proof from (normalized) term
 -}
+
+nbe : ∀ {Γ φ} → Γ ⊢ φ →  ∣ mkΔ Γ ∣ ⊢ φ
+nbe {Γ} {φ} proof rewrite  sym (fromToΠ {φ}) = normProof  
+  where
+    ch2 = CurryHoward2 {Γ} {φ} (lemma1 {Γ} {φ} proof)
+    term = π₁ ch2
+    red = normTyped (π₂ ch2)
+    red' = π₁ red
+    red2 = SubjectReduction2 {M = term} {N = red'} (π₂ ch2) (normIsBeta (π₂ red))
+    normProof = CurryHoward1 {mkΔ Γ} {red'} {toΠ φ}  red2
+
 
 {-
 IPCconsistent : [] ⊢ var "_|_" → Absurd

@@ -8,6 +8,7 @@ open import NAL.Data.Bool
 open import NAL.Data.Pair
 open import NAL.Data.Triple
 open import NAL.Data.String
+open import NAL.Data.Maybe
 
 open import NAL.Utils.Core
 open import NAL.Utils.Dependent hiding (Π)
@@ -216,22 +217,52 @@ reduceN{suc n} M = reduceN {n} (reduce M)
 --TODO : α-equivalence
 
 _↠β_ : Λ → Λ → Set
-M ↠β N = {n : ℕ} → reduceN {n} M ≡ N
+M ↠β N = Σ ℕ (λ n → reduceN {n} M ≡ N)
 
 _→β_ : Λ → Λ → Set
 M →β N = reduce M ≡ N
 
+reductionSteps : ℕ → Λ → 𝕃 Λ
+reductionSteps (suc n) M = M :: reductionSteps n (reduce M)
+reductionSteps 0 M = M :: []
 
 postulate
   SubjectReduction : ∀ {Γ M N σ} → Γ ⊢ M ∷ σ → M →β N → Γ ⊢ N ∷ σ
-  SubjectExpansion : ∀ {Γ M N σ} → Γ ⊢ M ∷ σ → M ↠β N → Γ ⊢ N ∷ σ
+  SubjectReduction2 : ∀ {Γ M N σ} → Γ ⊢ M ∷ σ → M ↠β N → Γ ⊢ N ∷ σ
   ChurchRosser : ∀{Γ M N N′ σ} → Γ ⊢ M ∷ σ → M ↠β N → M ↠β N′ →
     Σ Λ (λ L → ⟪ ⟪ N ↠β L , N′ ↠β L ⟫ , Γ ⊢ L ∷ σ ⟫)
 
-l1 : ∀{M N} → _→β_ M N → reduce M ≡ N
-l1 {M} {N} p = p
+--(\a.\b.a) c ((\d.e) d)
 
-l2 : ∀{x M N} → reduce ((ƛ var x ! M) $ N) ≡ M [ x := N ]
-l2 = refl
+Ex5 = (ƛ var "a" ! ƛ var "b" ! var "a") $ var "c" $ ((ƛ var "d" ! var "e") $ var "d")
 
 
+pattern Redex = ((ƛ var x ! M) $ N)
+
+{-# TERMINATING #-}
+norm : Λ → Maybe Λ
+norm Redex = Just  (reduce Redex)
+norm (var x) = Just (var x)
+norm (M $ N) with norm M | norm N
+... | Nothing | Nothing = Nothing
+... | Just M' | Nothing = norm (M' $ N)
+... | Nothing | Just N' = norm (M $ N')
+... | Just M' | Just N' = norm (M' $ N')
+norm (ƛ (var x) ! M) with norm M
+... | Just M' = norm (ƛ (var x) ! M')
+... | Nothing = Nothing
+norm (ƛ wtf ! M) = Nothing
+
+tryNorm : Λ → Λ
+tryNorm M with norm M
+... | Just M' = M'
+... | Nothing = M
+
+postulate
+  normIsBeta : ∀{M N} → norm M ≡ Just N → M ↠β N
+  typedNotNotImpossible : ∀{Γ M σ} → Γ ⊢ M ∷ σ → norm M ≡ Nothing  → ⊥
+
+normTyped : ∀ {Γ M σ} → Γ ⊢ M ∷ σ → Σ Λ (λ N → norm M ≡ Just N)
+normTyped {Γ} {M} {σ} p with inspect (norm M)
+... | Just N with≡ q = Σ N , q
+... | Nothing with≡ q = ⊥-elim (typedNotNotImpossible p q)

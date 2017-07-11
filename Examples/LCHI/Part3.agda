@@ -34,12 +34,12 @@ instance
 
 mutual
   data Binding : Set where
-     _∷_ : Λ → Π → Binding
+     _∷_ : String → Π → Binding
 
   data Λ : Set where
      var : String → Λ
      _$_ : Λ → Λ → Λ
-     ƛ_!_ : Λ → Λ → Λ
+     ƛ_!_ : String → Λ → Λ
 
 typeof :  Binding → Π
 typeof (_ ∷ τ) = τ
@@ -48,8 +48,8 @@ Context = 𝕃 Binding
 
 dom : Context → 𝕃 String
 dom [] = []
-dom (((var x) ∷ t) :: bs) = x :: dom bs
-dom (_ :: bs) = dom bs
+dom ((x ∷ t) :: bs) = x :: dom bs
+
 
 ran : Context → 𝕃 Π
 ran Γ = map (λ { (x ∷ τ) → τ}) Γ
@@ -57,8 +57,8 @@ ran Γ = map (λ { (x ∷ τ) → τ}) Γ
 
 
 data _⊢_∷_ : Context → Λ → Π → Set where
-  Ax : ∀ {Γ x τ} → (var x ∷ τ) :: Γ ⊢ var x ∷ τ -- x ∉ dom Γ
-  Abs : ∀ {Γ x τ M σ} → (var x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ var x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
+  Ax : ∀ {Γ x τ} → (x ∷ τ) :: Γ ⊢ var x ∷ τ -- x ∉ dom Γ
+  Abs : ∀ {Γ x τ M σ} → (x ∷ σ) :: Γ ⊢ M ∷ τ → Γ ⊢ ƛ x ! M ∷ σ ⇒ τ -- x ∉ dom Γ
   App : ∀ {Γ τ M σ N} → Γ ⊢ M ∷ σ ⇒ τ → Γ ⊢ N ∷ σ → Γ ⊢ (M $ N) ∷ τ
 
 postulate Exchange : ∀ {Γ x τ} → (n : ℕ) → exchange n Γ ⊢ x ∷ τ → Γ ⊢ x ∷ τ
@@ -73,14 +73,14 @@ height (App p q) = suc (maxₙ (height p) (height q))
 
 STLC = mkTriple Λ Π _⊢_∷_
 
-Ex1 : [] ⊢ ƛ var "x" ! var "x" ∷ tvar "σ" ⇒ tvar "σ"
+Ex1 : [] ⊢ ƛ "x" ! var "x" ∷ tvar "σ" ⇒ tvar "σ"
 Ex1 = Abs Ax
 
 
-Ex2 : [] ⊢ ƛ var "x" ! ƛ var "y" ! var "x" ∷ tvar "σ" ⇒ tvar "τ" ⇒ tvar "σ"
+Ex2 : [] ⊢ ƛ "x" ! ƛ "y" ! var "x" ∷ tvar "σ" ⇒ tvar "τ" ⇒ tvar "σ"
 Ex2 = Abs (Abs (Exchange 0 Ax))
 
-Ex3 : [] ⊢ ƛ var "x" ! ƛ var "y" ! ƛ var "z" ! var "x" $ var "z" $ (var "y" $ var "z")
+Ex3 : [] ⊢ ƛ "x" ! ƛ "y" ! ƛ "z" ! var "x" $ var "z" $ (var "y" $ var "z")
   ∷ (tvar "σ" ⇒ tvar "τ" ⇒ tvar "ρ") ⇒ (tvar "σ" ⇒ tvar "τ") ⇒ tvar "σ" ⇒ tvar "ρ"
 Ex3 = Abs(
   Abs(Abs(
@@ -96,7 +96,7 @@ Ex3 = Abs(
 
 FV' : Λ → ListSet String
 FV' (var x) = singletonSet x
-FV' (ƛ x ! P) = FV' P ─  FV' x
+FV' (ƛ x ! P) = FV' P ─  singletonSet x
 FV' (P $ Q) = FV' P ∪ FV' Q
 
 FV : Λ → 𝕃 String
@@ -125,7 +125,7 @@ doubleExchangeR {Γ} {x} {τ} {n} p rewrite doubleEx {n = n} {xs = Γ} = p
 ExchangeRev : ∀ {Γ x τ n} → Γ ⊢ x ∷ τ → exchange n Γ ⊢ x ∷ τ
 ExchangeRev {Γ} {x} {τ} {n} p = Exchange n (doubleExchange {n = n} p)
 
-GenerationLemma1 : ∀ {Γ x σ} → Γ ⊢ var x ∷ σ → (var x ∷ σ) ∈ Γ
+GenerationLemma1 : ∀ {Γ x σ} → Γ ⊢ var x ∷ σ → (x ∷ σ) ∈ Γ
 GenerationLemma1 Ax = hd
 
 GenerationLemma2 : ∀{Γ M N σ} → Γ ⊢ M $ N ∷ σ →
@@ -146,15 +146,14 @@ var x [ y := N ] with x is y
 ... | tt = N
 ... | ff = var x
 (P $ Q) [ x := N ] = (P [ x := N ] $ Q [ x := N ]) 
-(ƛ (var y) ! P)[ x := N ] with x is y
-(ƛ (var y) ! P)[ x := N ] | tt = ƛ (var x) ! P
-(ƛ (var y) ! P)[ x := N ] | ff with ¬ (x ∈? FV' N) ∨  ¬ (x ∈? FV' P)
-(ƛ (var y) ! P)[ x := N ] | ff | tt = (ƛ var y ! P [ x := N ])
-(ƛ (var y) ! P)[ x := N ] | ff | ff with x ∈? FV' N ∧ y ∈? FV' P
-(ƛ (var y) ! P)[ x := N ] | ff | ff | tt = ƛ var y ! P [ y := var z ] [ x := N ]
+(ƛ y ! P)[ x := N ] with x is y
+(ƛ y ! P)[ x := N ] | tt = ƛ x ! P
+(ƛ y ! P)[ x := N ] | ff with ¬ (x ∈? FV' N) ∨  ¬ (x ∈? FV' P)
+(ƛ y ! P)[ x := N ] | ff | tt = (ƛ y ! P [ x := N ])
+(ƛ y ! P)[ x := N ] | ff | ff with x ∈? FV' N ∧ y ∈? FV' P
+(ƛ y ! P)[ x := N ] | ff | ff | tt = ƛ y ! P [ y := var z ] [ x := N ]
   where z = newVar y --Problematic call here
-(ƛ (var y) ! P)[ x := N ] | ff | ff | ff = (ƛ var y ! P)
-(ƛ wtf ! P)[ x := N ] = ƛ wtf ! P [ x := N ]
+(ƛ y ! P)[ x := N ] | ff | ff | ff = (ƛ y ! P)
 
 _[_≔_] : Π → String → Π → Π
 (tvar β) [ α ≔ τ ] with α is β
@@ -176,7 +175,7 @@ eq=>≡ {σ ⇒ σ'} {τ ⇒ τ'} p rewrite eq=>≡ {σ} {τ} (a∧b→a p) | eq
 
 
 postulate
-  SubLemma2 : ∀{Γ M N σ τ x} → (var x ∷ τ) :: Γ ⊢ M ∷ σ → Γ ⊢ N ∷ τ → Γ ⊢ (_[_:=_] M x N) ∷ σ
+  SubLemma2 : ∀{Γ M N σ τ x} → (x ∷ τ) :: Γ ⊢ M ∷ σ → Γ ⊢ N ∷ τ → Γ ⊢ (_[_:=_] M x N) ∷ σ
 
 SubLemma1 : ∀{Γ M σ α τ} → Γ ⊢ M ∷ σ → Γ [ α ≔ᵣ τ ] ⊢ M ∷ (σ [ α ≔ τ ])
 SubLemma1 {α = α} (Ax {τ = σ}) with σ
@@ -207,7 +206,7 @@ SubLemma22 (App p q) b = App (SubLemma22 p b) (SubLemma22 q b)
 -}
 
 reduce : Λ → Λ
-reduce ((ƛ var x ! M) $ N) = M [ x := N ]
+reduce ((ƛ x ! M) $ N) = M [ x := N ]
 reduce M = M
 
 reduceN : {n : ℕ} → Λ → Λ
@@ -216,11 +215,50 @@ reduceN{suc n} M = reduceN {n} (reduce M)
 
 --TODO : α-equivalence
 
-_↠β_ : Λ → Λ → Set
-M ↠β N = Σ ℕ (λ n → reduceN {n} M ≡ N)
+data _→β_ : Λ → Λ → Set where
+  →β-redex : ∀{x M N} → ((ƛ x ! M) $ N) →β M [ x := N ]
+  →β-AR : ∀{F F' x} → F →β F' → ƛ x ! F →β ƛ x ! F'
+  →β-RR : ∀{F F' G} → F →β F' → F $ G →β F' $ G
+  →β-LR : ∀{F F' G} → F →β F' → G $ F →β G $ F'
 
-_→β_ : Λ → Λ → Set
-M →β N = reduce M ≡ N
+data _↠β_ : Λ → Λ → Set where
+  to↠β : ∀ {F G} → F →β G → F ↠β G
+  ↠β-refl : ∀{F} → F ↠β F
+  ↠β-trans : ∀{F G H} → F ↠β G → G ↠β H → F ↠β H
+
+↠β-RR : ∀{F F' G} → F ↠β F' → F $ G ↠β F' $ G
+↠β-RR (to↠β x) = to↠β (→β-RR x)
+↠β-RR ↠β-refl = ↠β-refl
+↠β-RR (↠β-trans p q) = ↠β-trans (↠β-RR p) (↠β-RR q)
+
+↠β-LR : ∀{F F' G} → F ↠β F' → G $ F ↠β G $ F'
+↠β-LR (to↠β x) = to↠β (→β-LR x)
+↠β-LR ↠β-refl = ↠β-refl
+↠β-LR (↠β-trans p q) = ↠β-trans (↠β-LR p) (↠β-LR q)
+
+data _=β_ : Λ → Λ → Set where
+  to=β : ∀ {F G} → F →β G → F =β G
+  =β-refl : ∀{F} → F =β F
+  =β-trans : ∀{F G H} → F =β G → G =β H → F =β H
+  =β-sym : ∀{F G} → F =β G → G =β F
+
+=β-AR : ∀{F F' x} → F =β F' → ƛ x ! F =β ƛ x ! F'
+=β-AR (to=β x) = to=β (→β-AR x)
+=β-AR =β-refl = =β-refl
+=β-AR (=β-trans p q) = =β-trans (=β-AR p) (=β-AR q)
+=β-AR (=β-sym p) = =β-sym (=β-AR p)
+
+=β-RR : ∀{F F' G} → F =β F' → F $ G =β F' $ G
+=β-RR (to=β x) = to=β (→β-RR x)
+=β-RR =β-refl = =β-refl
+=β-RR (=β-trans p q) = =β-trans (=β-RR p) (=β-RR q)
+=β-RR (=β-sym p) = =β-sym (=β-RR p)
+
+=β-LR : ∀{F F' G} → F =β F' → G $ F =β G $ F'
+=β-LR (to=β x) = to=β (→β-LR x)
+=β-LR =β-refl = =β-refl
+=β-LR (=β-trans p q) = =β-trans (=β-LR p) (=β-LR q)
+=β-LR (=β-sym p) = =β-sym (=β-LR p)
 
 reductionSteps : ℕ → Λ → 𝕃 Λ
 reductionSteps (suc n) M = M :: reductionSteps n (reduce M)
@@ -234,10 +272,10 @@ postulate
 
 --(\a.\b.a) c ((\d.e) d)
 
-Ex5 = (ƛ var "a" ! ƛ var "b" ! var "a") $ var "c" $ ((ƛ var "d" ! var "e") $ var "d")
+Ex5 = (ƛ "a" ! ƛ "b" ! var "a") $ var "c" $ ((ƛ "d" ! var "e") $ var "d")
 
 
-pattern Redex = ((ƛ var x ! M) $ N)
+pattern Redex = ((ƛ x ! M) $ N)
 
 {-# TERMINATING #-}
 norm : Λ → Maybe Λ
@@ -248,10 +286,10 @@ norm (M $ N) with norm M | norm N
 ... | Just M' | Nothing = norm (M' $ N)
 ... | Nothing | Just N' = norm (M $ N')
 ... | Just M' | Just N' = norm (M' $ N')
-norm (ƛ (var x) ! M) with norm M
-... | Just M' = norm (ƛ (var x) ! M')
+norm (ƛ x ! M) with norm M
+... | Just M' = norm (ƛ x ! M')
 ... | Nothing = Nothing
-norm (ƛ wtf ! M) = Nothing
+
 
 tryNorm : Λ → Λ
 tryNorm M with norm M
@@ -266,3 +304,5 @@ normTyped : ∀ {Γ M σ} → Γ ⊢ M ∷ σ → Σ Λ (λ N → norm M ≡ Jus
 normTyped {Γ} {M} {σ} p with inspect (norm M)
 ... | Just N with≡ q = Σ N , q
 ... | Nothing with≡ q = ⊥-elim (typedNotNotImpossible p q)
+
+

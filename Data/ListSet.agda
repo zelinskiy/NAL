@@ -17,8 +17,8 @@ fromSet (mkLS xs) = xs
 singletonSet : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → A → ListSet A
 singletonSet x = mkLS [ x ]
 
-ø : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A
-ø = mkLS []
+∅ : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A
+∅ = mkLS []
 
 card : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A → ℕ
 card (mkLS s) = length s 

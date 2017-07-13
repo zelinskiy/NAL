@@ -44,11 +44,11 @@ showΦ (φ ⊃ ψ) = primStringAppend (primStringAppend (showΦ ψ) " -> ") (sho
 
 mkΔ : 𝕃 Φ → 𝕃 Binding
 mkΔ [] = []
-mkΔ  (φ :: φs) = (var y of toΠ φ) :: mkΔ φs where y = primStringAppend "x_" (showΦ φ)
+mkΔ  (φ :: φs) = (y of toΠ φ) :: mkΔ φs where y = primStringAppend "x_" (showΦ φ)
 
 CurryHoward2 : ∀ {Γ φ} → Γ ⊢ φ → Σ Λ (λ M → mkΔ Γ ⊢ M ∷ toΠ φ) 
 CurryHoward2 Ax = Σ _ , Ax
-CurryHoward2 (⊃I {φ = φ} p) = Σ (ƛ var x ! π₁ p') , Abs (π₂ p')
+CurryHoward2 (⊃I {φ = φ} p) = Σ (ƛ x ! π₁ p') , Abs (π₂ p')
   where
     p'  = CurryHoward2 p
     x = primStringAppend "x_" (showΦ φ)

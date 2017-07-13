@@ -215,6 +215,8 @@ reduceN{suc n} M = reduceN {n} (reduce M)
 
 --TODO : α-equivalence
 
+
+
 data _→β_ : Λ → Λ → Set where
   →β-redex : ∀{x M N} → ((ƛ x ! M) $ N) →β M [ x := N ]
   →β-AR : ∀{F F' x} → F →β F' → ƛ x ! F →β ƛ x ! F'
@@ -241,6 +243,10 @@ data _=β_ : Λ → Λ → Set where
   =β-refl : ∀{F} → F =β F
   =β-trans : ∀{F G H} → F =β G → G =β H → F =β H
   =β-sym : ∀{F G} → F =β G → G =β F
+
+=β-redex : ∀{x M N} → ((ƛ x ! M) $ N) =β M [ x := N ]
+=β-redex = to=β →β-redex
+
 
 =β-AR : ∀{F F' x} → F =β F' → ƛ x ! F =β ƛ x ! F'
 =β-AR (to=β x) = to=β (→β-AR x)

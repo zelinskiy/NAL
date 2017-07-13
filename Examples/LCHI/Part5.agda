@@ -9,10 +9,11 @@ open import NAL.Data.Bool
 open import NAL.Data.Maybe
 open import NAL.Data.Pair
 
-open import NAL.Utils.Core using (_≡_; refl; inspect; _with≡_) 
+open import NAL.Utils.Function
+open import NAL.Utils.Core using (_≡_; refl; sym; cong; inspect; _with≡_; ⊥-elim; lzero) renaming (⊥ to Bot; trans to trans≡) 
 open import NAL.Utils.Dependent hiding (Π)
 
-open import NAL.Examples.LCHI.Part3 using (Λ; ƛ_!_; _$_; _↠β_; _=β_; _→β_; ↠β-RR; ↠β-LR; =β-RR; =β-LR; =β-AR; Π; tvar; _⇒_; Binding; _∷_; Context) renaming (var to lvar; _⊢_∷_ to _⊢ₗ_∷_; Ax to Axₗ; Exchange to Exchangeₗ; Abs to Absₗ; App to Appₗ)
+open import NAL.Examples.LCHI.Part3 using (ran; Λ; ƛ_!_; _$_; _↠β_; _=β_; _→β_; ↠β-RR; ↠β-LR; =β-redex; =β-RR; =β-LR; =β-AR; Π; tvar; _⇒_; Binding; _∷_; Context; _[_:=_]) renaming (FV' to λFV; var to lvar; _⊢_∷_ to _⊢ₗ_∷_; Ax to Axₗ; Exchange to Exchangeₗ; Abs to Absₗ; App to Appₗ)
 
 infixl 10 _#_
 infixr 5 _→ᵣ_
@@ -106,7 +107,7 @@ var y [ x ≔ G ] with x is y
 ... | tt = G
 ... | ff = var y
 (H # E) [ x ≔ G ] = (H [ x ≔ G ]) # (E [ x ≔ G ])
-S [ x ≔ G ] = S
+S [ x ≔ G ] = S 
 K [ x ≔ G ] = K
 
 postulate
@@ -132,42 +133,82 @@ toΛ (F # G) = toΛ F $ toΛ G
 ↠ᵣ-then-↠β (trans p q) = {!!}
 -}
 
--- TODO : Fix w respect to FV(F)
-λ*_!_ : String → Comb → Comb
-λ* x ! var y with x is y
-... | tt = I
-... | ff = K # var y
-λ* x ! (F # G) = S # (λ* x ! F) # (λ* x ! G)
-λ* x ! F = K # F
 
-{-
+
+fvS∅ : ∀ {x} → x ∈? FV S ≡ tt → Bot
+fvS∅ ()
+
+λ*_!_ : String → Comb → Comb
+λ* x ! F with x ∈? FV F
+λ* x ! F | ff = K # F
+λ* x ! var x' | tt = I
+λ* x ! (F # G) | tt = S # λ* x ! F # λ* x ! G
+λ* x ! S | tt = K # S --impossible
+λ* x ! K | tt = K # K --impossible
+
+irrelevantSubLemma : ∀ {x F G} → x ∈? FV F ≡ ff → F [ x ≔ G ] ≡ F
+irrelevantSubLemma {x} {var y} p with inspect (x is y)
+... | tt with≡ q rewrite q = 𝔹-contra (sym p)
+... | ff with≡ q rewrite p | q = refl
+irrelevantSubLemma {F = K} p = refl
+irrelevantSubLemma {F = S} p = refl
+irrelevantSubLemma {x} {F₁ # F₂} {G} p
+  rewrite
+    irrelevantSubLemma{x} {F₁}{G} (∪-projL{A = FV F₁} p) |
+    irrelevantSubLemma{x} {F₂}{G} (∪-projR{A = FV F₁} p)
+    = refl
+
 redexReduces : ∀{x F G} → (λ* x ! F) # G ↠ᵣ F [ x ≔ G ]
-redexReduces = {!!}
--}
+redexReduces {x} {F} {G} with inspect (x ∈? FV F)
+redexReduces {x} {var y} | ff with≡ p with x is y
+redexReduces {x} {var y} | ff with≡ p | tt rewrite p = 𝔹-contra (sym p)
+redexReduces {x} {var y} | ff with≡ p | ff = trans KR rfl
+redexReduces {x} {K} | ff with≡ p = trans rfl KR
+redexReduces {x} {S} | ff with≡ p = KR
+redexReduces {x} {F # H} {G} | ff with≡ p with inspect (x ∈? (FV F ∪ FV H))
+redexReduces {x} {F # H} {G} | ff with≡ p | tt with≡ q = 𝔹-contra (trans≡ (sym p) q)
+redexReduces {x} {F # H} {G} | ff with≡ p | ff with≡ q
+  rewrite p
+  | irrelevantSubLemma {F = F} {G} (∪-projL{A = FV F} p)
+  |  irrelevantSubLemma {F = H} {G} (∪-projR{A = FV F} p)
+  = trans KR rfl
+redexReduces {x} {var x'} {G} | tt with≡ p rewrite p with x is x'
+redexReduces {x} {var x'} {G} | tt with≡ p | tt = trans IR rfl
+redexReduces {x} {var x'} {G} | tt with≡ p | ff = trans IR (𝔹-contra p)
+redexReduces {x} {F # H} {G} | tt with≡ p rewrite p with inspect (x ∈? (FV F ∪ FV H))
+redexReduces {x} {F # H} {G} | tt with≡ p | tt with≡ q =
+  trans SR (trans (RR (redexReduces{x} {F}{G})) (trans (LR (redexReduces{x}{H}{G})) rfl))
+redexReduces {x} {F # H} {G} | tt with≡ p | ff with≡ q = 𝔹-contra (trans≡ (sym q) p)
+redexReduces {x} {S} {G} | tt with≡ p = KR
+redexReduces {x} {K} {G} | tt with≡ p = KR
+
 
 toComb : Λ → Comb
 toComb (lvar x) = var x
-toComb (M $ N) = toComb M # toComb  N
-toComb (ƛ x ! M) = λ* x ! toComb M
+toComb (t $ u) = toComb t # toComb u
+toComb (ƛ x ! t) = λ* x ! toComb t
 
-
-{-
 open _=β_
 open _→β_
 
-lemma1 : ∀{x M} → toΛ (toComb (ƛ x ! M)) =β ƛ x ! toΛ (toComb M)
-lemma1 {x} {M = lvar y} with x is y
-... | tt =  {!!}
-... | ff =  to=β ({!!})
-lemma1 {x} {M = M $ N} = {!!}
-lemma1 {M = ƛ y ! M} = {!!}
+postulate α-eq : ∀{M N x P} → M =β N → M [ x := P ] =β N [ x := P ]
 
+postulate lemma1 : ∀{x M} → toΛ (toComb (ƛ x ! M)) =β ƛ x ! toΛ (toComb M)
+{-
+lemma1 : ∀{x M} → toΛ (toComb (ƛ x ! M)) =β ƛ x ! toΛ (toComb M)
+lemma1 {x} {M} with inspect (x ∈? FV (toComb M))
+lemma1 {x} {lvar y} | tt with≡ p with primStringEquality x y
+lemma1 {x} {lvar y} | tt with≡ p | tt rewrite p = {!!}
+lemma1 {x} {lvar y} | tt with≡ p | ff rewrite p = 𝔹-contra p
+lemma1 {x} {M $ M₁} | tt with≡ p rewrite p = {!!}
+lemma1 {x} {ƛ x₁ ! M} | tt with≡ p rewrite p = {!!}
+lemma1 {x} {M} | ff with≡ p rewrite p = {!!}
+-}
 
 toCombToΛ : ∀{M} → toΛ (toComb M) =β M
 toCombToΛ {lvar x} = =β-refl
 toCombToΛ {M $ N} = =β-trans (=β-RR toCombToΛ) (=β-LR toCombToΛ)
 toCombToΛ {ƛ x ! M} = =β-trans (lemma1{x}{M}) (=β-AR toCombToΛ )
--}
 
 
 data _⊢ₖ_∷_ : Context → Comb → Π → Set where
@@ -176,16 +217,37 @@ data _⊢ₖ_∷_ : Context → Comb → Π → Set where
   SAxₖ : ∀ {Γ σ τ ρ} → Γ ⊢ₖ S ∷ (σ ⇒ τ ⇒ ρ) ⇒ (σ ⇒ τ) ⇒ σ ⇒ ρ
   Appₖ : ∀ {Γ M N σ τ} → Γ ⊢ₖ M ∷ σ ⇒ τ → Γ ⊢ₖ N ∷ σ → Γ ⊢ₖ M # N ∷ τ
 
+closedTermTypable : ∀{Γ x M σ τ} →
+  x ∈? FV M ≡ ff →
+  (x ∷ σ) :: Γ ⊢ₖ M ∷ τ →
+  Γ ⊢ₖ M ∷ τ
+closedTermTypable {x = x} p Axₖ rewrite primStringEqualityRefl {x} =
+  𝔹-contra (sym p)
+closedTermTypable p KAxₖ = KAxₖ
+closedTermTypable p SAxₖ = SAxₖ
+closedTermTypable {M = M # _} p (Appₖ q₁ q₂) =
+  Appₖ
+    (closedTermTypable (∪-projL{A = FV M} p) q₁)
+    (closedTermTypable (∪-projR{A = FV M} p) q₂)
+
+
 Lemma-5-2-3 : ∀ {Γ x F ρ τ} → (x ∷ ρ) :: Γ ⊢ₖ F ∷ τ → Γ ⊢ₖ λ* x ! F ∷ ρ ⇒ τ
-Lemma-5-2-3 {x = x}{τ = τ} Axₖ rewrite primStringEqualityRefl {x} = Appₖ (Appₖ SAxₖ KAxₖ) (KAxₖ{τ = τ})
+Lemma-5-2-3 {x = x}{τ = τ} Axₖ rewrite primStringEqualityRefl {x} =
+  Appₖ (Appₖ SAxₖ KAxₖ) (KAxₖ{τ = τ})
 Lemma-5-2-3 KAxₖ = Appₖ KAxₖ KAxₖ
 Lemma-5-2-3 SAxₖ = Appₖ KAxₖ SAxₖ
-Lemma-5-2-3 (Appₖ p q) = Appₖ (Appₖ SAxₖ (Lemma-5-2-3 p)) (Lemma-5-2-3 q)
+Lemma-5-2-3 {x = x}{M # N} (Appₖ p q) with inspect (x ∈? (FV M ∪ FV N))
+... | tt with≡ h rewrite h = Appₖ (Appₖ SAxₖ (Lemma-5-2-3 p)) (Lemma-5-2-3 q)
+... | ff with≡ h rewrite h = Appₖ KAxₖ (Appₖ
+  (closedTermTypable (∪-projL{A = FV M} h) p)
+  (closedTermTypable (∪-projR{A = FV M} h) q))
+
 
 Proposition1 : ∀ {Γ F τ} → Γ ⊢ₖ F ∷ τ → Γ ⊢ₗ toΛ F ∷ τ
 Proposition1 Axₖ = Axₗ
 Proposition1 KAxₖ = Absₗ (Absₗ (Exchangeₗ 0 Axₗ))
-Proposition1 SAxₖ = Absₗ (Absₗ (Absₗ (Appₗ (Appₗ (Exchangeₗ 1 (Exchangeₗ 0 Axₗ)) Axₗ) (Appₗ (Exchangeₗ 0 Axₗ) Axₗ))))
+Proposition1 SAxₖ = Absₗ (Absₗ (Absₗ (Appₗ (Appₗ
+  (Exchangeₗ 1 (Exchangeₗ 0 Axₗ)) Axₗ) (Appₗ (Exchangeₗ 0 Axₗ) Axₗ))))
 Proposition1 (Appₖ p q) = Appₗ (Proposition1 p) (Proposition1 q)
 
 Proposition2 : ∀ {Γ F τ} → Γ ⊢ₗ F ∷ τ → Γ ⊢ₖ toComb F ∷ τ
@@ -193,44 +255,72 @@ Proposition2 Axₗ = Axₖ
 Proposition2 (Absₗ p) = Lemma-5-2-3 (Proposition2 p)
 Proposition2 (Appₗ p q) = Appₖ (Proposition2 p) (Proposition2 q)
 
+
+
 infixr 50 _⊃_
 
 data Φ : Set where
   hvar : String → Φ
   _⊃_ : Φ → Φ → Φ
-  ⊥ : Φ
 
-_[_] : ∀ {ℓ} {A : Set ℓ} → 𝕃 A → ℕ → Maybe A
-[] [ n ] = Nothing
-(x :: xs) [ 0 ] = Just x
-(x :: xs) [ suc n ] = xs [ n ]
-
-removeAt : ∀ {ℓ} {A : Set ℓ} → ℕ → 𝕃 A → 𝕃 A
-removeAt _ [] = []
-removeAt 0 (x :: xs) = xs
-removeAt (suc n) (x :: xs) = x :: removeAt n xs
-
-data _⊢ₕₚ_ : 𝕃 Φ → 𝕃 Φ → Set where
-  H-[] : ∀ {Γ} → Γ ⊢ₕₚ []
-  H-As : ∀ {Γ A p} → (i : ℕ) → Γ [ i ] ≡ Just A → Γ ⊢ₕₚ p → removeAt i Γ ⊢ₕₚ (A :: p)
-  H-Ex : ∀ {Γ A p} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ ((⊥ ⊃ A) :: p)
-  H-AxK : ∀ {Γ A B p} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ ((A ⊃ (B ⊃ A)) :: p)
-  H-AxS : ∀ {Γ A B C p} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ (((A ⊃ (B ⊃ C)) ⊃ ((A ⊃ B) ⊃ (A ⊃ C))) :: p)
-  H-MP : ∀ {Γ A B p} → (i j : ℕ) →
-    {f : p [ i ] ≡ Just (A ⊃ B)} → {a : p [ j ] ≡ Just A} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ (B :: p)
+data _⊢ₕₚ_ (Γ : 𝕃 Φ) :  𝕃 Φ → Set where
+  H-[] : Γ ⊢ₕₚ []
+  H-As : ∀ {A p} → A ∈ Γ → Γ ⊢ₕₚ p → Γ ⊢ₕₚ (A :: p)
+  H-AxK : ∀ {A B p} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ ((A ⊃ (B ⊃ A)) :: p)
+  H-AxS : ∀ {A B C p} → Γ ⊢ₕₚ p → Γ ⊢ₕₚ (((A ⊃ (B ⊃ C)) ⊃ ((A ⊃ B) ⊃ (A ⊃ C))) :: p)
+  H-MP : ∀ {A B p} → (A ⊃ B) ∈ p → A ∈ p → Γ ⊢ₕₚ p → Γ ⊢ₕₚ (B :: p) 
 
 
 _⊢ₕ_ : 𝕃 Φ → Φ → Set
-Γ ⊢ₕ φ = Σ (𝕃 Φ) (λ p → Γ ⊢ₕₚ (φ :: p))
+Γ ⊢ₕ φ = Σ (𝕃 Φ) (λ p → Γ ⊢ₕₚ φ :: p)
 
+
+H-Id : ∀ {Γ A} → Γ ⊢ₕ (A ⊃ A)
+H-Id {A = A} =
+      Σ (A ⊃ (A ⊃ A)) ⊃ A ⊃ A
+      :: A ⊃ A ⊃ A
+      :: (A ⊃ ((A ⊃ A) ⊃ A)) ⊃ ((A ⊃ (A ⊃ A)) ⊃ (A ⊃ A))
+      :: A ⊃ (A ⊃ A) ⊃ A
+      :: []
+  , H-MP hd (tl hd) (H-MP (tl hd) (tl (tl hd)) (H-AxK (H-AxS (H-AxK H-[]))))
+
+postulate
+  Herbrand1 : ∀ {Γ A B} → A :: Γ ⊢ₕ B → Γ ⊢ₕ A ⊃ B
+  Herbrand2 : ∀ {Γ A B} → A :: Γ ⊢ₕ B → Γ ⊢ₕ A ⊃ B
 {-
-H-Id : ∀ {Γ φ} → Γ ⊢ₕ (φ ⊃ φ)
-H-Id {φ = φ} =
-      {- 1 -} Σ (φ ⊃ (ψ ⊃ φ) ⊃ φ) ⊃ ((φ ⊃ (ψ ⊃ φ)) ⊃ (φ ⊃ φ)) -- Axiom S 
-      {- 2 -} :: φ ⊃ (ψ ⊃ φ) ⊃ φ -- Axiom K
-      {- 3 -} :: (φ ⊃ (ψ ⊃ φ)) ⊃ (φ ⊃ φ) -- MP 1 2
-      {- 4 -} :: φ ⊃ (ψ ⊃ φ) -- Axiom K
-      {- 5 -} :: [] -- φ ⊃ φ  MP 3 4
-  , {!!}
-  where ψ = hvar "ψ" --Arbitrary
+data _⊢ₕₚ′_ (Γ : 𝕃 Φ) :  𝕃 Φ → Set where
+  H-[] : Γ ⊢ₕₚ′ []
+  H-As : ∀ {A p} → A ∈ Γ → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ (A :: p)
+  H-Ex : ∀ {A p} → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ ((⊥ ⊃ A) :: p)
+  H-AxK : ∀ {A B p} → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ ((A ⊃ (B ⊃ A)) :: p)
+  H-AxS : ∀ {A B C p} → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ (((A ⊃ (B ⊃ C)) ⊃ ((A ⊃ B) ⊃ (A ⊃ C))) :: p)
+  H-PL : ∀ {A B p} → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ (((A ⊃ B) ⊃ A) ⊃ A :: p)
+  H-MP : ∀ {A B p} → (A ⊃ B) ∈ p → A ∈ p → Γ ⊢ₕₚ′ p → Γ ⊢ₕₚ′ (B :: p) 
+
+
+_⊢ₕ′_ : 𝕃 Φ → Φ → Set
+Γ ⊢ₕ′ φ = Σ (𝕃 Φ) (λ p → Γ ⊢ₕₚ′ φ :: p)
 -}
+toΦ : Π → Φ
+toΦ (tvar x) = hvar x
+toΦ (φ ⇒ ψ) = (toΦ φ) ⊃ (toΦ ψ)
+
+fromΦ : Φ → Π
+fromΦ (hvar x) = tvar x
+fromΦ (φ ⊃ ψ) = (fromΦ φ) ⇒ (fromΦ ψ)
+
+∣_∣ : Context → 𝕃 Φ
+∣_∣ = map (λ { (x ∷ τ) → toΦ τ}) 
+
+showΦ : Φ → String
+showΦ (hvar x) = x
+showΦ (φ ⊃ ψ) = primStringAppend (primStringAppend (showΦ ψ) " -> ") (showΦ ψ)
+
+mkΔ : 𝕃 Φ → 𝕃 Binding
+mkΔ [] = []
+mkΔ  (φ :: φs) = (y ∷ fromΦ φ) :: mkΔ φs where y = primStringAppend "x_" (showΦ φ)
+
+
+postulate
+  Proposition538₁ : ∀{Γ F φ} → Γ ⊢ₖ F ∷ φ → ∣ Γ ∣ ⊢ₕ toΦ φ
+  Proposition538₂ : ∀{Γ φ} → Γ ⊢ₕ φ → Σ Comb (λ F → mkΔ Γ ⊢ₖ F ∷ fromΦ φ) 

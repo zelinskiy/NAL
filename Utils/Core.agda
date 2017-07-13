@@ -18,9 +18,9 @@ sym refl = refl
 trans :  ∀ {ℓ} {A : Set ℓ} → {a b c : A} → a ≡ b → b ≡ c → a ≡ c
 trans refl refl  = refl
 
-cong :  ∀ {ℓ} {A : Set ℓ} → {a b : A} → {B : Set ℓ} → {f : A → B} →
+cong :  ∀ {ℓ} {A : Set ℓ} → {a b : A} → {B : Set ℓ} → (f : A → B) →
   a ≡ b → (f a) ≡ (f b)
-cong refl = refl
+cong f refl = refl
 
 data Singleton {a} {A : Set a} (x : A) : Set a where
   _with≡_ : (y : A) → x ≡ y → Singleton x

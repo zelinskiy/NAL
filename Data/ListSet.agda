@@ -5,6 +5,8 @@ open import NAL.Data.Nats
 open import NAL.Data.Bool
 open import NAL.Data.Eq
 
+open import NAL.Utils.Core
+
 data ListSet {ℓ}(A : Set ℓ){{_ : Eq A}} : Set ℓ where
   mkLS : 𝕃 A → ListSet A
 
@@ -37,6 +39,28 @@ _─_ : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A → ListSet A → ListSe
 _∪_ : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A → ListSet A → ListSet A
 xs ∪ ys = mkLS ((fromSet (xs ─ ys)) ++ (fromSet ys))
 
+filterttLemma : ∀{ℓ}{T : Set ℓ}{xs : 𝕃 T} → filter (λ z → tt) xs ≡ xs
+filterttLemma {xs = []} = refl
+filterttLemma {xs = x :: xs} = cong (x ::_) filterttLemma
+
+postulate
+  ∪-projL : ∀{ℓ}{T : Set ℓ}{{eqT : Eq T}}{A B : ListSet T}{x : T} → x ∈? (A ∪ B) ≡ ff → x ∈? A ≡ ff
+  ∪-projR : ∀{ℓ}{T : Set ℓ}{{eqT : Eq T}}{A B : ListSet T}{x : T} → x ∈? (A ∪ B) ≡ ff → x ∈? B ≡ ff
+{-
+∪-projL : ∀{ℓ}{T : Set ℓ}{{eqT : Eq T}}{A B : ListSet T}{x : T} →
+  x ∈? (A ∪ B) ≡ ff →
+  x ∈? A ≡ ff
+∪-projL {A = mkLS []} {mkLS []} p = p
+∪-projL {A = mkLS []} {mkLS (b :: bs)}{x} p with x is b
+∪-projL {A = mkLS []} {mkLS (b :: bs)}{x} p | tt = refl
+∪-projL {A = mkLS []} {mkLS (b :: bs)}{x} p | ff = refl
+∪-projL {A = mkLS (a :: as)} {mkLS []}{x} p with x is a
+∪-projL {A = mkLS (a :: as)} {mkLS []}{x} p | tt = 𝔹-contra (sym p)
+∪-projL {A = mkLS (a :: as)} {mkLS []}{x} p | ff rewrite ++[] (filter (λ z → tt) as) | filterttLemma {xs = as} = p
+∪-projL {A = mkLS (a :: as)} {mkLS  bs} {x} p with inspect (x is a)
+... | tt with≡ ()
+... | ff with≡ q rewrite q | ∪-projL {A = mkLS as} {mkLS bs} {x} {!!} = refl
+-}
 _∩_ : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A → ListSet A → ListSet A
 xs ∩ ys = mkLS (filter (λ e → e ∈? xs ∧ e ∈? ys) (fromSet xs))
 

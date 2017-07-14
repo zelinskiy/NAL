@@ -34,9 +34,9 @@ infixl 25 _+_
 0+ : ∀ (x : ℕ) → 0 + x ≡ x
 0+ x = refl
 
-+0 : ∀ (x : ℕ) → x + 0 ≡ x
++0 : (x : ℕ) → x + 0 ≡ x
 +0 zero = refl
-+0 (suc x) rewrite +0 x = refl
++0 (suc x) = trans (cong suc (+0 x)) refl
 
 +assoc : ∀ (x y z : ℕ) → x + (y + z) ≡ (x + y) + z
 +assoc zero y z = refl
@@ -48,7 +48,7 @@ infixl 25 _+_
 
 +comm : ∀ (x y : ℕ) → x + y ≡ y + x
 +comm zero y rewrite +0 y = refl
-+comm (suc x) y rewrite +comm x y | +suc-lemma y x = refl
++comm (suc x) y rewrite +comm x y | +suc-lemma y x = refl -- trans (cong suc (+comm x y)) (trans (sym (+suc-lemma y x)) refl)
 
 --suc x + y ≡ y + suc x
 --suc (y + x) ≡ y + suc x

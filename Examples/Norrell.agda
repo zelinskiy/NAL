@@ -1,4 +1,4 @@
-module NAL.Lambda.STLC where
+module NAL.Examples.Norrell where
 
 open import NAL.Data.Nats
 open import NAL.Data.List

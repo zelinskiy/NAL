@@ -4,6 +4,8 @@ open import NAL.Data.Char
 open import NAL.Data.List
 open import NAL.Data.Bool
 open import NAL.Data.Nats
+open import NAL.Data.Int
+open import NAL.Data.Float
 open import NAL.Data.Eq
 open import NAL.Data.Comparable
 
@@ -19,6 +21,8 @@ primitive
   primStringEquality : String → String → 𝔹
   primShowChar       : Char → String
   primShowString     : String → String
+  primShowInteger    : ℤ -> String
+  primShowFloat      : Float -> String
 
 showNat9 : ℕ → String
 showNat9 n = primStringFromList (dropFirst (dropLast (primStringToList (primShowChar (primNatToChar (48 + n)))))) 

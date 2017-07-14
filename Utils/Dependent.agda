@@ -16,7 +16,7 @@ open Σ public
 ΠΣ : {A : Set} {B : A → Set} → Π A B → (a : A) → Σ A B
 ΠΣ f x = Σ x , f x
 
-data R {A B : Set} (a : A) (b : B) : Set where
+private data R {A B : Set} (a : A) (b : B) : Set where
 
 
 

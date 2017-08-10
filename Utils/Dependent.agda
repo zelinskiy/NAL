@@ -18,8 +18,26 @@ open Σ public
 
 private data R {A B : Set} (a : A) (b : B) : Set where
 
+<<<<<<< HEAD
 _×_ : ∀ {a b} (A : Set a) (B : Set b) → Set (a ⊔ b)
 A × B = Σ A (λ x → B)
+=======
+infix 2 Σ-syntax
+
+Σ-syntax : ∀ {a b} (A : Set a) → (A → Set b) → Set (a ⊔ b)
+Σ-syntax = Σ
+
+syntax Σ-syntax A (λ x → B) = Σ[ x ∈ A ] B
+
+∃ : ∀ {a b} {A : Set a} → (A → Set b) → Set (a ⊔ b)
+∃ = Σ _
+
+∃-syntax : ∀ {a b} {A : Set a} → (A → Set b) → Set (a ⊔ b)
+∃-syntax = ∃
+
+syntax ∃-syntax (λ x → B) = ∃[ x ] B
+
+>>>>>>> e09e59e78b1ea6d0ad2b37c7a403f8061f7dc535
 
 --Axiom of Choice!
 ac : {A B : Set} →

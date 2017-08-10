@@ -10,6 +10,10 @@ data 𝔹 : Set where
 {-# BUILTIN TRUE tt #-}
 {-# BUILTIN FALSE ff #-}
 
+Bool = 𝔹
+true = tt
+false = ff
+
 
 infix 7 ¬_
 
@@ -32,6 +36,8 @@ infixl 4 _∨_
 _∨_ : 𝔹 → 𝔹 → 𝔹
 tt ∨ b = tt
 ff ∨ b = b
+
+
 
 infixl 5 _xor_
 
@@ -109,6 +115,13 @@ _ implies _ = tt
 ∨-comm {tt} {ff} p = refl
 ∨-comm {ff} {tt} p = refl
 ∨-comm {ff} {ff} ()
+
+b→a∨b : ∀ {a b} → b ≡ tt → (a ∨ b) ≡ tt
+b→a∨b {tt} p rewrite p = refl
+b→a∨b {ff} p rewrite p = refl
+
+a→a∨b : ∀ {a b} → a ≡ tt → (a ∨ b) ≡ tt
+a→a∨b p rewrite p = refl
 
 𝔹-contra : ff ≡ tt → ∀ {P : Set} → P
 𝔹-contra ()

@@ -11,3 +11,5 @@ data ℤ : Set where
 {-# BUILTIN INTEGER ℤ    #-}
 {-# BUILTIN INTEGERPOS pos #-}
 {-# BUILTIN INTEGERNEGSUC negsuc #-}
+
+Int = ℤ

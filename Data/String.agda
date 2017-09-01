@@ -5,7 +5,6 @@ open import NAL.Data.List
 open import NAL.Data.Bool
 open import NAL.Data.Nats
 open import NAL.Data.Int
-open import NAL.Data.Float
 open import NAL.Data.Eq
 open import NAL.Data.Comparable
 
@@ -22,19 +21,20 @@ primitive
   primShowChar       : Char → String
   primShowString     : String → String
   primShowInteger    : ℤ -> String
-  primShowFloat      : Float -> String
 
 showNat9 : ℕ → String
 showNat9 n = primStringFromList (dropFirst (dropLast (primStringToList (primShowChar (primNatToChar (48 + n)))))) 
 
-instance
-  EqString : Eq String
-  EqString = record {_is_ = primStringEquality}
+
 
 postulate
   Strings≡ : ∀{x y} → primStringEquality x y ≡ tt → x ≡ y
   primStringEqualityRefl : ∀{x} → primStringEquality x x ≡ tt
   primStringEqualitySym : ∀{x y} → primStringEquality x y ≡ tt → primStringEquality y x ≡ tt
+
+instance
+  EqString : Eq String
+  EqString = record {_is_ = primStringEquality; is→≡ = Strings≡}
 
 instance
   ComparableString : Comparable String

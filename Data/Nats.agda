@@ -16,7 +16,7 @@ data ℕ : Set where
 {-# BUILTIN NATURAL  ℕ  #-}
 
 
-
+Nat = ℕ
 
 
 

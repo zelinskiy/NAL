@@ -18,7 +18,9 @@ record CategoricalProposition : Set where
     subject : Term
     object : Term
 
-postulate holds : CategoricalProposition → Set
+postulate ⊢_ : CategoricalProposition → Set
+
+infixl 1 ⊢_
 
 -- A
 All_are_ : Term → Term → CategoricalProposition
@@ -60,102 +62,111 @@ obvert (cp quantity quality subject object) =
 postulate
   -- Figure 1
   Barbara : ∀ {S M P} →
-    holds (All M are P) →
-    holds (All S are M) →
-    holds (All S are P)
+    ⊢ All M are P →
+    ⊢ All S are M →
+    ⊢ All S are P
 
   Celarent : ∀ {S M P} →
-    holds (Some M are P) →
-    holds (All S are M) →
-    holds (Some S are P)
+    ⊢ Some M are P →
+    ⊢ All S are M →
+    ⊢ Some S are P
 
   Darii : ∀ {S M P} →
-    holds (All M are P) →
-    holds (No S are M) →
-    holds (No S are P)
+    ⊢ All M are P →
+    ⊢ No S are M →
+    ⊢ No S are P
 
   Ferio : ∀ {S M P} →
-    holds (Some M are P) →
-    holds (No S are M) →
-    holds (Some S aren't P)
+    ⊢ Some M are P →
+    ⊢ No S are M →
+    ⊢ Some S aren't P
 
   -- Figure 2
 
   Cesare : ∀ {S M P} →
-    holds (No P are M) →
-    holds (All S are M) →
-    holds (No S are P)
+    ⊢ No P are M →
+    ⊢ All S are M →
+    ⊢ No S are P
 
   Camestres : ∀ {S M P} →
-    holds (All P are M) →
-    holds (No S are M) →
-    holds (No S are P)
+    ⊢ All P are M →
+    ⊢ No S are M →
+    ⊢ No S are P
 
   Festino : ∀ {S M P} →
-    holds (No P are M) →
-    holds (Some S are M) →
-    holds (Some S aren't P)
+    ⊢ No P are M →
+    ⊢ Some S are M →
+    ⊢ Some S aren't P
 
   Baroco : ∀ {S M P} →
-    holds (All P are M) →
-    holds (Some S aren't M) →
-    holds (Some S aren't P)
+    ⊢ All P are M →
+    ⊢ Some S aren't M →
+    ⊢ Some S aren't P
 
   -- Figure 3
 
   Darapti : ∀ {S M P} →
-    holds (All M are P) →
-    holds (All M are S) →
-    holds (Some S are P)
+    ⊢ All M are P →
+    ⊢ All M are S →
+    ⊢ Some S are P
 
   Disamis : ∀ {S M P} →
-    holds (Some M are P) →
-    holds (All M are S) →
-    holds (Some S are P)
+    ⊢ Some M are P →
+    ⊢ All M are S →
+    ⊢ Some S are P
 
   Datisi : ∀ {S M P} →
-    holds (All M are P) →
-    holds (Some M are S) →
-    holds (Some S are P)
+    ⊢ All M are P →
+    ⊢ Some M are S →
+    ⊢ Some S are P
 
   Felapton : ∀ {S M P} →
-    holds (No M are P) →
-    holds (All M are S) →
-    holds (Some S aren't P)
+    ⊢ No M are P →
+    ⊢ All M are S →
+    ⊢ Some S aren't P
 
   Bocardo : ∀ {S M P} →
-    holds (Some M aren't P) →
-    holds (All M are S) →
-    holds (Some S aren't P)
+    ⊢ Some M aren't P →
+    ⊢ All M are S →
+    ⊢ Some S aren't P
 
   Ferison : ∀ {S M P} →
-    holds (No M are P) →
-    holds (Some M are S) →
-    holds (Some S aren't P)
+    ⊢ No M are P →
+    ⊢ Some M are S →
+    ⊢ Some S aren't P
 
   -- Figure 4
 
   Bramantip : ∀ {S M P} →
-    holds (All P are M) →
-    holds (All M are S) →
-    holds (Some S are P)
+    ⊢ All P are M →
+    ⊢ All M are S →
+    ⊢ Some S are P
 
   Camenes : ∀ {S M P} →
-    holds (All P are M) →
-    holds (No M are S) →
-    holds (No S are P)
+    ⊢ All P are M →
+    ⊢ No M are S →
+    ⊢ No S are P
 
   Dimaris : ∀ {S M P} →
-    holds (Some P aren't M) →
-    holds (All M are S) →
-    holds (Some S aren't P)
+    ⊢ Some P aren't M →
+    ⊢ All M are S →
+    ⊢ Some S aren't P
 
   Fesapo : ∀ {S M P} →
-    holds (No P are M) →
-    holds (All M are S) →
-    holds (Some S aren't P)
+    ⊢ No P are M →
+    ⊢ All M are S →
+    ⊢ Some S aren't P
 
   Fresison : ∀ {S M P} →
-    holds (No P are M) →
-    holds (Some M are S) →
-    holds (Some S aren't P)
+    ⊢ No P are M →
+    ⊢ Some M are S →
+    ⊢ Some S aren't P
+
+postulate
+  egoists philosophers cynics : Term
+
+All-cynics-are-philosophers :
+  ⊢ All egoists are philosophers →
+  ⊢ All cynics are egoists →
+  ⊢  All cynics are philosophers
+All-cynics-are-philosophers A B = {!!}

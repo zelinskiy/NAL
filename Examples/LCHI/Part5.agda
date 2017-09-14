@@ -277,7 +277,7 @@ _⊢ₕ_ : 𝕃 Φ → Φ → Set
 
 H-Id : ∀ {Γ A} → Γ ⊢ₕ (A ⊃ A)
 H-Id {A = A} =
-      Σ (A ⊃ (A ⊃ A)) ⊃ A ⊃ A
+        (A ⊃ (A ⊃ A)) ⊃ A ⊃ A
       :: A ⊃ A ⊃ A
       :: (A ⊃ ((A ⊃ A) ⊃ A)) ⊃ ((A ⊃ (A ⊃ A)) ⊃ (A ⊃ A))
       :: A ⊃ (A ⊃ A) ⊃ A
@@ -324,4 +324,18 @@ mkΔ  (φ :: φs) = (y ∷ fromΦ φ) :: mkΔ φs where y = primStringAppend "x_
 postulate
   Proposition538₁ : ∀{Γ F φ} → Γ ⊢ₖ F ∷ φ → ∣ Γ ∣ ⊢ₕ toΦ φ
   Proposition538₂ : ∀{Γ φ} → Γ ⊢ₕ φ → Σ Comb (λ F → mkΔ Γ ⊢ₖ F ∷ fromΦ φ) 
- 
+
+
+{-
+TODO : Okasaki's PA flat combinators
+data PA : Set where
+  varₚₐ : String → PA
+  P A : PA
+  _%_ : PA → PA → PA
+
+data _→ₚₐ_ : PA → PA → Set where
+  PA-KR : ∀{F G} → P # F # G →ₚₐ F
+  PA-SR : ∀{F G H} → A # F # G # H →ₚₐ F # H # (G # H)
+  PA-RR : ∀{F F' G} → F →ᵣ F' → F # G →ₚₐ F' # G
+  PA-LR : ∀{F F' G} → F →ᵣ F' → G # F →ₚₐ G # F'
+-}

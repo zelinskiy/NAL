@@ -130,11 +130,11 @@ GenerationLemma1 Ax = hd
 
 GenerationLemma2 : ∀{Γ M N σ} → Γ ⊢ M $ N ∷ σ →
     Σ Π (λ τ → ⟪ (Γ ⊢ M ∷ τ ⇒ σ) , (Γ ⊢ N ∷ τ) ⟫)
-GenerationLemma2 (App {σ = σ'} p q) = Σ σ' , ⟨ p , q ⟩
+GenerationLemma2 (App {σ = σ'} p q) = σ' , ⟨ p , q ⟩
 
 GenerationLemma3 : ∀ {Γ M x σ} → Γ ⊢ (ƛ x ! M) ∷ σ →
   Σ ⟪ Π , Π ⟫ (λ {⟨ τ , ρ ⟩ → ⟪ ((x ∷ τ) :: Γ ⊢ M ∷ ρ) , (σ ≡ τ ⇒ ρ) ⟫})
-GenerationLemma3  (Abs {τ = ρ}{σ = τ} p) = Σ ⟨ τ , ρ ⟩ , ⟨ p , refl ⟩
+GenerationLemma3  (Abs {τ = ρ}{σ = τ} p) = ⟨ τ , ρ ⟩ , ⟨ p , refl ⟩
 
 newVar : String → String
 newVar x = primStringAppend x "'" 
@@ -308,7 +308,7 @@ postulate
 
 normTyped : ∀ {Γ M σ} → Γ ⊢ M ∷ σ → Σ Λ (λ N → norm M ≡ Just N)
 normTyped {Γ} {M} {σ} p with inspect (norm M)
-... | Just N with≡ q = Σ N , q
+... | Just N with≡ q = N , q
 ... | Nothing with≡ q = ⊥-elim (typedNotNotImpossible p q)
 
 

@@ -64,6 +64,19 @@ postulate
 _∩_ : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → ListSet A → ListSet A → ListSet A
 xs ∩ ys = mkLS (filter (λ e → e ∈? xs ∧ e ∈? ys) (fromSet xs))
 
+postulate
+  thm1 : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}}{a b : ListSet A} →
+    (a ⊆? b) ∧ (b ⊆? a) ≡ tt →
+    a ≡ b
+
+{-
+thm1 {a = mkLS []} {mkLS []} p = refl
+thm1 {a = mkLS []} {mkLS (b :: bs)} p = {!!}
+thm1 {a = mkLS (a :: as)} {mkLS []} p = {!!}
+thm1 {a = mkLS (a :: as)} {mkLS (b :: bs)} p = {!!}
+-}
 instance
   EqListSet : ∀{ℓ}{A : Set ℓ}{{_ : Eq A}} → Eq (ListSet A)
-  EqListSet = record {_is_ = λ A B → (A ⊆? B) ∧ (B ⊆? A)}
+  EqListSet = record { _is_ = λ A B → (A ⊆? B) ∧ (B ⊆? A)}
+
+-- record {_is_ = λ A B → (A ⊆? B) ∧ (B ⊆? A)}

@@ -34,7 +34,7 @@ postulate
 
 instance
   EqString : Eq String
-  EqString = record {_is_ = primStringEquality; is→≡ = Strings≡}
+  EqString = record {_is_ = primStringEquality}
 
 instance
   ComparableString : Comparable String

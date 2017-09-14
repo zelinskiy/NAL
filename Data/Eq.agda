@@ -9,13 +9,13 @@ open import NAL.Utils.Core
 record Eq {ℓ}(A : Set ℓ) : Set ℓ where
   field
     _is_ : A → A → 𝔹
-    is→≡ : ∀ {a b} → a is b ≡ tt → a ≡ b
+    {- is→≡ : ∀ {a b} → a is b ≡ tt → a ≡ b -}
 
 open Eq {{...}} public
 
 instance
   Eqℕ : Eq ℕ
-  Eqℕ = record { _is_ = h; is→≡ = g}
+  Eqℕ = record { _is_ = h}
     where
       h : ℕ → ℕ → 𝔹
       h 0 0 = tt
@@ -29,7 +29,7 @@ instance
 
 instance
   Eq𝔹 : Eq 𝔹
-  Eq𝔹 = record {_is_ = h; is→≡ = g}
+  Eq𝔹 = record {_is_ = h}
     where
       h : 𝔹 → 𝔹 → 𝔹
       h tt tt = tt
